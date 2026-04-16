@@ -147,8 +147,18 @@ auth.onAuthStateChanged((user) => {
 
 // SIDEBAR
 function toggleSidebar(){
-  document.getElementById("sidebar").classList.toggle("-translate-x-full");
-  document.getElementById("overlay").classList.toggle("hidden");
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+
+  const isClosed = sidebar.classList.contains("-translate-x-full");
+
+  if(isClosed){
+    sidebar.classList.remove("-translate-x-full");
+    overlay.classList.remove("hidden");
+  } else {
+    sidebar.classList.add("-translate-x-full");
+    overlay.classList.add("hidden");
+  }
 }
 
 function closeSidebar(){
@@ -156,6 +166,11 @@ function closeSidebar(){
   document.getElementById("overlay").classList.add("hidden");
 }
 
+// 🔥 garante estado inicial correto
+window.addEventListener("load", () => {
+  document.getElementById("sidebar").classList.add("-translate-x-full");
+  document.getElementById("overlay").classList.add("hidden");
+});
 // SALÁRIO
 function setSalary(){
   salary = parseFloat(document.getElementById("salary").value) || 0;
