@@ -93,8 +93,7 @@ const firebaseConfig = {
   projectId: "meu-consumo-financeiro",
   storageBucket: "meu-consumo-financeiro.firebasestorage.app",
   messagingSenderId: "725415055361",
-  appId: "1:725415055361:web:116b201e1be0fcd5117000",
-  measurementId: "G-0N0XKJCS18"
+  appId: "1:725415055361:web:116b201e1be0fcd5117000"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -102,46 +101,52 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 🔥 força login persistente
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+// ✔ CORREÇÃO PRINCIPAL: persistência correta
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+  .then(() => {
+    console.log("Persistência OK");
+  })
+  .catch((error) => {
+    console.log("Persistência erro:", error);
+  });
 
-// ================= LOGIN =================
-function login() {
+// DADOS
+let userId = null;
+let transactions = [];
+let salary = 0;
+let cycle = 1;
+
+// LOGIN
+function login(){
   const provider = new firebase.auth.GoogleAuthProvider();
-
-  // ✔ método mais estável (SEM popup quebrando)
   auth.signInWithRedirect(provider);
 }
 
-// ================= LOGOUT =================
-function logout() {
+function logout(){
   auth.signOut();
 }
 
-// ================= RETORNO DO LOGIN =================
+// ✔ CORREÇÃO: garantir retorno do redirect
 auth.getRedirectResult()
   .then((result) => {
     if (result.user) {
-      console.log("Login OK:", result.user.email);
+      console.log("LOGIN OK:", result.user.email);
     }
   })
   .catch((error) => {
-    console.log("Login error:", error);
+    console.log("LOGIN ERROR:", error);
   });
 
-// ================= ESTADO DO USUÁRIO =================
-auth.onAuthStateChanged(async (user) => {
+// AUTH STATE (CORRIGIDO)
+auth.onAuthStateChanged((user) => {
 
   const box = document.getElementById("userEmail");
 
   if (user) {
     userId = user.uid;
-
-    // mostra usuário na tela
     box.innerText = "Logado: " + user.email;
 
-    // carrega dados
-    await load();
+    load();
 
   } else {
     userId = null;
@@ -170,11 +175,11 @@ function closeSidebar(){
   document.getElementById("overlay").classList.add("hidden");
 }
 
-// 🔥 garante estado inicial correto
 window.addEventListener("load", () => {
   document.getElementById("sidebar").classList.add("-translate-x-full");
   document.getElementById("overlay").classList.add("hidden");
 });
+
 // SALÁRIO
 function setSalary(){
   salary = parseFloat(document.getElementById("salary").value) || 0;
@@ -210,7 +215,6 @@ function add(){
 
 // TOGGLE PAGO
 function togglePaid(id){
-
   const t = transactions.find(x => x.id === id);
   if(t) t.paid = !t.paid;
 
@@ -254,7 +258,6 @@ async function load(){
 
 // HISTORY
 function renderHistory(){
-
   const box = document.getElementById("history");
   box.innerHTML = "";
 
@@ -280,16 +283,15 @@ function render(){
     let status = "";
 
     if(t.value < 0 && !t.paid){
-      status = `<span style="color:red">PENDENTE</span>`;
+      status = `<span style="color:red;font-weight:bold">PENDENTE</span>`;
     }
 
     if(t.paid){
-      status = `<span style="color:green">PAGO</span>`;
+      status = `<span style="color:green;font-weight:bold">PAGO</span>`;
     }
 
     list.innerHTML += `
       <div class="bg-gray-800 p-2 rounded flex justify-between">
-
         <div>
           ${t.desc} (${t.category}) - R$ ${t.value}
           ${status}
@@ -299,7 +301,6 @@ function render(){
           <button onclick="togglePaid(${t.id})">✔</button>
           <button onclick="del(${t.id})">❌</button>
         </div>
-
       </div>
     `;
   });
