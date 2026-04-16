@@ -5,13 +5,56 @@
   <title>Controle de Gastos</title>
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Firebase (COMPAT MODE para evitar erros de firebase is not defined) -->
+  <!-- Firebase Compat (CORRETO PARA HTML SIMPLES) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
+
 <body class="bg-gray-900 text-white p-6">
 
+  <!-- BOTÃO SIDEBAR -->
+<button onclick="toggleSidebar()"
+class="fixed top-3 left-3 bg-gray-800 px-3 py-2 rounded z-50">
+☰
+</button>
+
+<!-- SIDEBAR -->
+<div id="sidebar"
+class="fixed top-0 left-0 w-72 h-full bg-gray-950 p-4 transform -translate-x-full transition z-50">
+
+  <h2 class="font-bold mb-4">⚙ Painel</h2>
+
+  <!-- LOGIN -->
+  <div class="bg-gray-900 p-3 rounded mb-4">
+    <p class="text-sm mb-2">👤 Conta</p>
+    <button onclick="login()" class="bg-green-600 w-full p-2 rounded mb-2">Login Google</button>
+    <button onclick="logout()" class="bg-red-600 w-full p-2 rounded">Sair</button>
+    <p id="user" class="text-xs mt-2"></p>
+  </div>
+
+  <!-- SALÁRIO -->
+  <div class="mb-4">
+    <p class="text-sm">💰 Salário</p>
+    <input id="salary" type="number" class="bg-gray-800 p-2 w-full rounded">
+    <button onclick="setSalary()" class="bg-blue-600 w-full p-2 rounded mt-2">Salvar</button>
+  </div>
+
+  <!-- CICLO MENSAL -->
+  <div class="mb-4">
+    <p class="text-sm">📅 Dia de ciclo</p>
+    <input id="cycleDay" type="number" min="1" max="31" class="bg-gray-800 p-2 w-full rounded">
+    <button onclick="setCycle()" class="bg-purple-600 w-full p-2 rounded mt-2">Salvar ciclo</button>
+  </div>
+
+  <!-- HISTÓRICO -->
+  <div>
+    <p class="font-bold mb-2">📊 Histórico mensal</p>
+    <div id="monthlyHistory" class="text-sm space-y-1"></div>
+  </div>
+
+</div>
+  
   <div class="max-w-2xl mx-auto bg-gray-800 p-6 rounded-2xl shadow-lg">
     <h1 class="text-2xl font-bold mb-4">💰 Controle de Gastos</h1>
 
@@ -22,13 +65,13 @@
       <p id="user" class="text-sm mt-2"></p>
     </div>
 
-    <!-- APP (só aparece logado) -->
+    <!-- APP -->
     <div id="app" style="display:none;">
 
-      <!-- ADICIONAR TRANSAÇÃO -->
+      <!-- TRANSAÇÃO -->
       <div class="mb-4">
         <input id="desc" type="text" placeholder="Descrição" class="bg-gray-700 border border-gray-600 p-2 w-full mb-2 rounded text-white">
-        
+
         <select id="category" class="bg-gray-700 border border-gray-600 p-2 w-full mb-2 rounded text-white">
           <option value="Alimentação">🍔 Alimentação</option>
           <option value="Transporte">🚗 Transporte</option>
@@ -39,6 +82,12 @@
 
         <input id="value" type="number" placeholder="Valor" class="bg-gray-700 border border-gray-600 p-2 w-full mb-2 rounded text-white">
         <button onclick="addTransaction()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded w-full">Adicionar</button>
+      </div>
+
+      <!-- DÍVIDA -->
+      <div class="mb-4">
+        <input id="debt" type="number" placeholder="Total de dívidas" class="bg-gray-700 border border-gray-600 p-2 w-full mb-2 rounded text-white">
+        <button onclick="setDebt()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded w-full">Definir Dívida</button>
       </div>
 
       <!-- RESUMO -->
@@ -66,115 +115,132 @@
     </div>
   </div>
 
-  <script>
-    // 🔥 CONFIG FIREBASE (VOCÊ PRECISA PREENCHER)
-    const firebaseConfig = {
-      apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
-      authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
-      projectId: "meu-controle-financeiro-a0572",
-    };
+<script>
+// 🔥 FIREBASE CONFIG (SEU PROJETO)
+const firebaseConfig = {
+  apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
+  authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
+  projectId: "meu-controle-financeiro-a0572",
+  storageBucket: "meu-controle-financeiro-a0572.firebasestorage.app",
+  messagingSenderId: "202199536593",
+  appId: "1:202199536593:web:811841065ee713a886c6f0"
+};
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+firebase.initializeApp(firebaseConfig);
 
-    let userId = null;
-    let transactions = [];
-    let debt = 0;
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-    // LOGIN GOOGLE
-    function login() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider);
-    }
+let userId = null;
+let transactions = [];
+let debt = 0;
 
-    function logout() {
-      auth.signOut();
-    }
+// LOGIN
+function login() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err => alert(err.message));
+}
 
-    auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        userId = user.uid;
-        document.getElementById('user').innerText = user.email;
-        document.getElementById('app').style.display = 'block';
-        loadData();
-      } else {
-        userId = null;
-        document.getElementById('user').innerText = '';
-        document.getElementById('app').style.display = 'none';
-      }
-    });
+function logout() {
+  auth.signOut();
+}
 
-    // CARREGAR DADOS
-    async function loadData() {
-      const doc = await db.collection('users').doc(userId).get();
-      if (doc.exists) {
-        const data = doc.data();
-        transactions = data.transactions || [];
-        debt = data.debt || 0;
-      }
-      updateUI();
-    }
+auth.onAuthStateChanged(async (user) => {
+  if (user) {
+    userId = user.uid;
+    document.getElementById('user').innerText = user.email;
+    document.getElementById('app').style.display = 'block';
+    await loadData();
+  } else {
+    userId = null;
+    document.getElementById('user').innerText = '';
+    document.getElementById('app').style.display = 'none';
+  }
+});
 
-    // SALVAR DADOS
-    async function saveData() {
-      if (!userId) return;
-      await db.collection('users').doc(userId).set({
-        transactions,
-        debt
-      });
-    }
+// CARREGAR
+async function loadData() {
+  const doc = await db.collection('users').doc(userId).get();
+  if (doc.exists) {
+    const data = doc.data();
+    transactions = data.transactions || [];
+    debt = data.debt || 0;
+  }
+  updateUI();
+}
 
-    function updateUI() {
-      const list = document.getElementById('list');
-      list.innerHTML = '';
+// SALVAR
+async function saveData() {
+  if (!userId) return;
+  await db.collection('users').doc(userId).set({
+    transactions,
+    debt
+  });
+}
 
-      let total = 0;
-      let income = 0;
-      let expenses = 0;
+// ATUALIZAR UI
+function updateUI() {
+  const list = document.getElementById('list');
+  list.innerHTML = '';
 
-      transactions.forEach((t, i) => {
-        total += t.value;
-        if (t.value > 0) income += t.value;
-        else expenses += t.value;
+  let total = 0;
+  let income = 0;
+  let expenses = 0;
 
-        const li = document.createElement('li');
-        li.className = 'bg-gray-700 p-2 rounded flex justify-between';
-        li.innerHTML = `
-          <span>${t.desc} (${t.category})</span>
-          <span>R$ ${t.value.toFixed(2)}</span>
-          <button onclick="removeTransaction(${i})" class="text-red-400">X</button>
-        `;
-        list.appendChild(li);
-      });
+  transactions.forEach((t, i) => {
+    total += t.value;
 
-      document.getElementById('income').innerText = income.toFixed(2);
-      document.getElementById('expenses').innerText = Math.abs(expenses).toFixed(2);
-      document.getElementById('balance').innerText = total.toFixed(2);
-      document.getElementById('remaining').innerText = Math.max(debt - total, 0).toFixed(2);
+    if (t.value > 0) income += t.value;
+    else expenses += t.value;
 
-      saveData();
-    }
+    const li = document.createElement('li');
+    li.className = 'bg-gray-700 p-2 rounded flex justify-between';
+    li.innerHTML = `
+      <span>${t.desc} (${t.category})</span>
+      <span>R$ ${t.value.toFixed(2)}</span>
+      <button onclick="removeTransaction(${i})" class="text-red-400">X</button>
+    `;
+    list.appendChild(li);
+  });
 
-    function addTransaction() {
-      const desc = document.getElementById('desc').value;
-      const value = parseFloat(document.getElementById('value').value);
-      const category = document.getElementById('category').value;
+  document.getElementById('income').innerText = income.toFixed(2);
+  document.getElementById('expenses').innerText = Math.abs(expenses).toFixed(2);
+  document.getElementById('balance').innerText = total.toFixed(2);
+  document.getElementById('remaining').innerText = Math.max(debt - total, 0).toFixed(2);
 
-      if (!desc || isNaN(value)) return alert('Preencha tudo');
+  saveData();
+}
 
-      transactions.push({ desc, value, category });
+// ADICIONAR
+function addTransaction() {
+  const desc = document.getElementById('desc').value.trim();
+  const value = parseFloat(document.getElementById('value').value);
+  const category = document.getElementById('category').value;
 
-      document.getElementById('desc').value = '';
-      document.getElementById('value').value = '';
+  if (!desc || isNaN(value)) return alert('Preencha corretamente');
 
-      updateUI();
-    }
+  transactions.push({ desc, value, category });
 
-    function removeTransaction(i) {
-      transactions.splice(i, 1);
-      updateUI();
-    }
-  </script>
+  document.getElementById('desc').value = '';
+  document.getElementById('value').value = '';
+
+  updateUI();
+}
+
+// REMOVER
+function removeTransaction(i) {
+  transactions.splice(i, 1);
+  updateUI();
+}
+
+// DÍVIDA
+function setDebt() {
+  const value = parseFloat(document.getElementById('debt').value);
+  debt = isNaN(value) ? 0 : value;
+  updateUI();
+}
+
+</script>
+
 </body>
 </html>
