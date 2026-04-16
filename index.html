@@ -1,27 +1,31 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Controle de Gastos</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<title>Controle de Gastos</title>
+<script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Firebase Compat (CORRETO PARA HTML SIMPLES) -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 
 <body class="bg-gray-900 text-white p-6">
 
-  <!-- BOTÃO SIDEBAR -->
+<!-- BOTÃO SIDEBAR -->
 <button onclick="toggleSidebar()"
 class="fixed top-3 left-3 bg-gray-800 px-3 py-2 rounded z-50">
 ☰
 </button>
 
+<!-- OVERLAY (CLIQUE PARA FECHAR) -->
+<div id="overlay"
+class="fixed inset-0 bg-black/50 hidden z-40"
+onclick="closeSidebar()"></div>
+
 <!-- SIDEBAR -->
 <div id="sidebar"
-class="fixed top-0 left-0 w-72 h-full bg-gray-950 p-4 transform -translate-x-full transition z-50">
+class="fixed top-0 left-0 w-72 h-full bg-gray-950 p-4 transform -translate-x-full transition z-50 overflow-y-auto">
 
   <h2 class="font-bold mb-4">⚙ Painel</h2>
 
@@ -40,205 +44,250 @@ class="fixed top-0 left-0 w-72 h-full bg-gray-950 p-4 transform -translate-x-ful
     <button onclick="setSalary()" class="bg-blue-600 w-full p-2 rounded mt-2">Salvar</button>
   </div>
 
-  <!-- CICLO MENSAL -->
+  <!-- CICLO -->
   <div class="mb-4">
-    <p class="text-sm">📅 Dia de ciclo</p>
-    <input id="cycleDay" type="number" min="1" max="31" class="bg-gray-800 p-2 w-full rounded">
-    <button onclick="setCycle()" class="bg-purple-600 w-full p-2 rounded mt-2">Salvar ciclo</button>
+    <p class="text-sm">📅 Dia do ciclo</p>
+    <input id="cycle" type="number" min="1" max="31" class="bg-gray-800 p-2 w-full rounded">
+    <button onclick="setCycle()" class="bg-purple-600 w-full p-2 rounded mt-2">Salvar</button>
   </div>
 
   <!-- HISTÓRICO -->
   <div>
     <p class="font-bold mb-2">📊 Histórico mensal</p>
-    <div id="monthlyHistory" class="text-sm space-y-1"></div>
+    <div id="history" class="text-sm space-y-1"></div>
   </div>
 
 </div>
-  
-  <div class="max-w-2xl mx-auto bg-gray-800 p-6 rounded-2xl shadow-lg">
-    <h1 class="text-2xl font-bold mb-4">💰 Controle de Gastos</h1>
 
-    <!-- LOGIN -->
-    <div class="mb-4 text-center">
-      <button onclick="login()" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">Login com Google</button>
-      <button onclick="logout()" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded ml-2">Sair</button>
-      <p id="user" class="text-sm mt-2"></p>
-    </div>
+<!-- MAIN -->
+<h1 class="text-xl font-bold mb-4 ml-10">💰 Controle de Gastos</h1>
 
-    <!-- APP -->
-    <div id="app" style="display:none;">
+<!-- LOGIN STATUS -->
+<div class="mb-4 ml-10 text-sm">
+  <p id="userEmail"></p>
+</div>
 
-      <!-- TRANSAÇÃO -->
-      <div class="mb-4">
-        <input id="desc" type="text" placeholder="Descrição" class="bg-gray-700 border border-gray-600 p-2 w-full mb-2 rounded text-white">
+<!-- FORM -->
+<div class="bg-gray-800 p-4 rounded mb-4 ml-10">
 
-        <select id="category" class="bg-gray-700 border border-gray-600 p-2 w-full mb-2 rounded text-white">
-          <option value="Alimentação">🍔 Alimentação</option>
-          <option value="Transporte">🚗 Transporte</option>
-          <option value="Contas">🏠 Contas</option>
-          <option value="Lazer">🎮 Lazer</option>
-          <option value="Outros">📦 Outros</option>
-        </select>
+  <input id="desc" class="bg-gray-700 p-2 w-full rounded mb-2" placeholder="Descrição">
 
-        <input id="value" type="number" placeholder="Valor" class="bg-gray-700 border border-gray-600 p-2 w-full mb-2 rounded text-white">
-        <button onclick="addTransaction()" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded w-full">Adicionar</button>
-      </div>
+  <select id="category" class="bg-gray-700 p-2 w-full rounded mb-2">
+    <option>💧 Água</option>
+    <option>🚌 Transporte</option>
+    <option>🏠 Contas</option>
+    <option>🍔 Alimentação</option>
+    <option>💡 Luz</option>
+    <option>💰 Saldo</option>
+    <option>📦 Outros</option>
+  </select>
 
-      <!-- DÍVIDA -->
-      <div class="mb-4">
-        <input id="debt" type="number" placeholder="Total de dívidas" class="bg-gray-700 border border-gray-600 p-2 w-full mb-2 rounded text-white">
-        <button onclick="setDebt()" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded w-full">Definir Dívida</button>
-      </div>
+  <input id="value" type="number" class="bg-gray-700 p-2 w-full rounded mb-2" placeholder="Valor">
 
-      <!-- RESUMO -->
-      <div class="grid grid-cols-2 gap-4 text-sm mb-4">
-        <div class="bg-green-900 p-3 rounded">
-          <p>Total entradas</p>
-          <strong>R$ <span id="income">0</span></strong>
-        </div>
-        <div class="bg-red-900 p-3 rounded">
-          <p>Total gastos</p>
-          <strong>R$ <span id="expenses">0</span></strong>
-        </div>
-        <div class="bg-blue-900 p-3 rounded">
-          <p>Saldo</p>
-          <strong>R$ <span id="balance">0</span></strong>
-        </div>
-        <div class="bg-yellow-700 text-black p-3 rounded">
-          <p>Dívida restante</p>
-          <strong>R$ <span id="remaining">0</span></strong>
-        </div>
-      </div>
+  <button onclick="add()" class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
+</div>
 
-      <!-- LISTA -->
-      <ul id="list" class="space-y-2"></ul>
-    </div>
-  </div>
+<h2 class="ml-10 font-bold mb-2">📌 Lista</h2>
+<div id="list" class="space-y-2 ml-10"></div>
 
 <script>
-// 🔥 FIREBASE CONFIG (SEU PROJETO)
+
+// FIREBASE
 const firebaseConfig = {
-  apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
-  authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
-  projectId: "meu-controle-financeiro-a0572",
-  storageBucket: "meu-controle-financeiro-a0572.firebasestorage.app",
-  messagingSenderId: "202199536593",
-  appId: "1:202199536593:web:811841065ee713a886c6f0"
+  apiKey: "AIzaSyC8Uz0IBqtqrmfTtECv3gr5rqbIWY4gIF0",
+  authDomain: "meu-consumo-financeiro.firebaseapp.com",
+  projectId: "meu-consumo-financeiro",
+  storageBucket: "meu-consumo-financeiro.firebasestorage.app",
+  messagingSenderId: "725415055361",
+  appId: "1:725415055361:web:116b201e1be0fcd5117000"
 };
 
 firebase.initializeApp(firebaseConfig);
-
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+// DADOS
 let userId = null;
 let transactions = [];
-let debt = 0;
+let salary = 0;
+let cycle = 1;
 
 // LOGIN
-function login() {
+function login(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(err => alert(err.message));
+  auth.signInWithPopup(provider);
 }
 
-function logout() {
+function logout(){
   auth.signOut();
 }
 
-auth.onAuthStateChanged(async (user) => {
-  if (user) {
+// AUTH STATE
+auth.onAuthStateChanged((user) => {
+
+  const box = document.getElementById("userEmail");
+
+  if(user){
     userId = user.uid;
-    document.getElementById('user').innerText = user.email;
-    document.getElementById('app').style.display = 'block';
-    await loadData();
+    box.innerText = "Logado: " + user.email;
+    load();
   } else {
     userId = null;
-    document.getElementById('user').innerText = '';
-    document.getElementById('app').style.display = 'none';
+    box.innerText = "Faça login";
   }
 });
 
-// CARREGAR
-async function loadData() {
-  const doc = await db.collection('users').doc(userId).get();
-  if (doc.exists) {
+// SIDEBAR
+function toggleSidebar(){
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+
+  sidebar.classList.toggle("-translate-x-full");
+  overlay.classList.toggle("hidden");
+}
+
+function closeSidebar(){
+  document.getElementById("sidebar").classList.add("-translate-x-full");
+  document.getElementById("overlay").classList.add("hidden");
+}
+
+// SALÁRIO
+function setSalary(){
+  salary = parseFloat(document.getElementById("salary").value) || 0;
+  save();
+}
+
+// CICLO
+function setCycle(){
+  cycle = parseInt(document.getElementById("cycle").value) || 1;
+  save();
+}
+
+// ADD
+function add(){
+
+  const desc = document.getElementById("desc").value;
+  const value = parseFloat(document.getElementById("value").value);
+  const category = document.getElementById("category").value;
+
+  if(!desc || isNaN(value)) return;
+
+  transactions.push({
+    id: Date.now(),
+    desc,
+    value,
+    category,
+    paid: false
+  });
+
+  save();
+  render();
+}
+
+// TOGGLE PAGO
+function togglePaid(id){
+
+  const t = transactions.find(x => x.id === id);
+  if(t) t.paid = !t.paid;
+
+  save();
+  render();
+}
+
+// DELETE
+function del(id){
+  transactions = transactions.filter(t => t.id !== id);
+  save();
+  render();
+}
+
+// SAVE
+function save(){
+  if(!userId) return;
+
+  db.collection("users").doc(userId).set({
+    transactions,
+    salary,
+    cycle
+  });
+}
+
+// LOAD
+async function load(){
+  if(!userId) return;
+
+  const doc = await db.collection("users").doc(userId).get();
+
+  if(doc.exists){
     const data = doc.data();
     transactions = data.transactions || [];
-    debt = data.debt || 0;
+    salary = data.salary || 0;
+    cycle = data.cycle || 1;
   }
-  updateUI();
+
+  render();
 }
 
-// SALVAR
-async function saveData() {
-  if (!userId) return;
-  await db.collection('users').doc(userId).set({
-    transactions,
-    debt
+// HISTORY
+function renderHistory(){
+
+  const box = document.getElementById("history");
+  box.innerHTML = "";
+
+  transactions.forEach(t => {
+    const div = document.createElement("div");
+    div.innerText = `${t.desc} - R$ ${t.value}`;
+    box.appendChild(div);
   });
 }
 
-// ATUALIZAR UI
-function updateUI() {
-  const list = document.getElementById('list');
-  list.innerHTML = '';
+// RENDER
+function render(){
+
+  const list = document.getElementById("list");
+  list.innerHTML = "";
 
   let total = 0;
-  let income = 0;
-  let expenses = 0;
 
-  transactions.forEach((t, i) => {
+  transactions.forEach(t => {
+
     total += t.value;
 
-    if (t.value > 0) income += t.value;
-    else expenses += t.value;
+    let status = "";
 
-    const li = document.createElement('li');
-    li.className = 'bg-gray-700 p-2 rounded flex justify-between';
-    li.innerHTML = `
-      <span>${t.desc} (${t.category})</span>
-      <span>R$ ${t.value.toFixed(2)}</span>
-      <button onclick="removeTransaction(${i})" class="text-red-400">X</button>
+    if(t.value < 0 && !t.paid){
+      status = `<span style="color:red">PENDENTE</span>`;
+    }
+
+    if(t.paid){
+      status = `<span style="color:green">PAGO</span>`;
+    }
+
+    list.innerHTML += `
+      <div class="bg-gray-800 p-2 rounded flex justify-between">
+
+        <div>
+          ${t.desc} (${t.category}) - R$ ${t.value}
+          ${status}
+        </div>
+
+        <div class="flex gap-2">
+          <button onclick="togglePaid(${t.id})">✔</button>
+          <button onclick="del(${t.id})">❌</button>
+        </div>
+
+      </div>
     `;
-    list.appendChild(li);
   });
 
-  document.getElementById('income').innerText = income.toFixed(2);
-  document.getElementById('expenses').innerText = Math.abs(expenses).toFixed(2);
-  document.getElementById('balance').innerText = total.toFixed(2);
-  document.getElementById('remaining').innerText = Math.max(debt - total, 0).toFixed(2);
-
-  saveData();
+  document.getElementById("history").innerHTML = "";
+  renderHistory();
 }
 
-// ADICIONAR
-function addTransaction() {
-  const desc = document.getElementById('desc').value.trim();
-  const value = parseFloat(document.getElementById('value').value);
-  const category = document.getElementById('category').value;
-
-  if (!desc || isNaN(value)) return alert('Preencha corretamente');
-
-  transactions.push({ desc, value, category });
-
-  document.getElementById('desc').value = '';
-  document.getElementById('value').value = '';
-
-  updateUI();
-}
-
-// REMOVER
-function removeTransaction(i) {
-  transactions.splice(i, 1);
-  updateUI();
-}
-
-// DÍVIDA
-function setDebt() {
-  const value = parseFloat(document.getElementById('debt').value);
-  debt = isNaN(value) ? 0 : value;
-  updateUI();
-}
+// INIT
+render();
 
 </script>
 
