@@ -99,46 +99,49 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
-const db = firebase.firestore(); // ✔ corrigido (sem duplicar)
+const db = firebase.firestore();
 
+// 🔥 força login persistente
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-// DADOS
-let userId = null;
-let transactions = [];
-let salary = 0;
-let cycle = 1;
-
-// LOGIN
-function login(){
+// ================= LOGIN =================
+function login() {
   const provider = new firebase.auth.GoogleAuthProvider();
+
+  // ✔ método mais estável (SEM popup quebrando)
   auth.signInWithRedirect(provider);
 }
 
-function logout(){
+// ================= LOGOUT =================
+function logout() {
   auth.signOut();
 }
 
-// ✔ CORREÇÃO LOGIN REDIRECT
+// ================= RETORNO DO LOGIN =================
 auth.getRedirectResult()
   .then((result) => {
     if (result.user) {
-      console.log("Logado:", result.user.email);
+      console.log("Login OK:", result.user.email);
     }
   })
   .catch((error) => {
     console.log("Login error:", error);
   });
 
-// AUTH STATE
-auth.onAuthStateChanged((user) => {
+// ================= ESTADO DO USUÁRIO =================
+auth.onAuthStateChanged(async (user) => {
 
   const box = document.getElementById("userEmail");
 
-  if(user){
+  if (user) {
     userId = user.uid;
+
+    // mostra usuário na tela
     box.innerText = "Logado: " + user.email;
-    load();
+
+    // carrega dados
+    await load();
+
   } else {
     userId = null;
     box.innerText = "Faça login";
