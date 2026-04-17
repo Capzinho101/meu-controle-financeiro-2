@@ -13,7 +13,282 @@
 <body class="bg-gray-900 text-white flex">
 
 <!-- MENU LATERAL -->
-<div id="sidebar" class="fixed left-[-250px] top-0 w-64 h-full bg-gray-800 p-4 transition-all">
+<div id="sidebar" class="fixed left-[-250px] top-0 w-64 h-full bg-gray-800 p-4 transition-all"><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Controle de Gastos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+
+<body class="bg-gray-900 text-white flex">
+
+<!-- MENU LATERAL -->
+<div id="sidebar" class="fixed left-[-250px] top-0 w-64 h-full bg-gray-800 p-4 transition-all z-50">
+  <h2 class="text-xl mb-4">Menu</h2>
+
+  <button onclick="login()" class="bg-green-600 w-full p-2 mb-2 rounded">Login</button>
+  <button onclick="logout()" class="bg-gray-600 w-full p-2 mb-2 rounded">Sair</button>
+
+  <input id="salary" type="number" placeholder="Salário mensal"
+    class="w-full p-2 mt-4 bg-gray-700 rounded">
+</div>
+
+<button onclick="toggleMenu()" class="fixed top-4 left-4 bg-blue-600 px-3 py-2 rounded z-50">☰</button>
+
+<!-- APP -->
+<div class="w-full max-w-2xl mx-auto bg-gray-800 p-6 rounded-2xl shadow-lg mt-10">
+
+<h1 class="text-2xl font-bold mb-4">💰 Controle de Gastos</h1>
+
+<div id="app" style="display:none;">
+
+<!-- FORM -->
+<div class="mb-4">
+  <input id="desc" placeholder="Descrição" class="w-full p-2 mb-2 bg-gray-700 rounded">
+
+  <select id="category" class="w-full p-2 mb-2 bg-gray-700 rounded">
+    <option>Alimentação</option>
+    <option>Transporte</option>
+    <option>Contas</option>
+    <option>Lazer</option>
+    <option>Outros</option>
+    <option>Dívida</option>
+    <option>Saldo</option>
+    <option>Luz</option>
+  </select>
+
+  <input id="value" type="number" placeholder="Valor" class="w-full p-2 mb-2 bg-gray-700 rounded">
+
+  <button onclick="addTransaction()" class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
+</div>
+
+<!-- RESUMO -->
+<div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+  <div>Entradas: R$ <span id="income">0</span></div>
+  <div>Gastos: R$ <span id="expenses">0</span></div>
+  <div>Saldo: R$ <span id="balance">0</span></div>
+  <div>Salário: R$ <span id="salaryView">0</span></div>
+</div>
+
+<ul id="list"></ul>
+
+<h2 class="mt-6 text-lg font-bold">📅 Histórico</h2>
+<ul id="history"></ul>
+
+</div>
+</div>
+
+<script>
+// 🔥 CONFIG FIREBASE
+const firebaseConfig = {
+  apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
+  authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
+  projectId: "meu-controle-financeiro-a0572",
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let userId = null;
+let transactions = [];
+let history = [];
+let salary = 0;
+let lastReset = null;
+
+// MENU
+function toggleMenu(){
+  const menu = document.getElementById("sidebar");
+  menu.style.left = menu.style.left === "0px" ? "-250px" : "0px";
+}
+
+// LOGIN
+function login(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider);
+}
+function logout(){
+  auth.signOut();
+}
+
+auth.onAuthStateChanged(user=>{
+  if(user){
+    userId = user.uid;
+    document.getElementById("app").style.display = "block";
+    loadData();
+  }
+});
+
+// CICLO MENSAL (DIA 9)
+function checkCycle(){
+  const today = new Date();
+  const currentMonthKey = `${today.getFullYear()}-${today.getMonth()+1}`;
+
+  if (!lastReset) lastReset = currentMonthKey;
+
+  if (today.getDate() === 9 && lastReset !== currentMonthKey) {
+
+    transactions.forEach(t => {
+      history.push({
+        ...t,
+        date: new Date(),
+        month: currentMonthKey
+      });
+    });
+
+    transactions = [];
+    lastReset = currentMonthKey;
+  }
+}
+
+// LOAD
+async function loadData(){
+  const doc = await db.collection("users").doc(userId).get();
+  if(doc.exists){
+    const d = doc.data();
+    transactions = d.transactions || [];
+    history = d.history || [];
+    salary = d.salary || 0;
+    lastReset = d.lastReset || null;
+  }
+  document.getElementById("salary").value = salary;
+  updateUI();
+}
+
+// SAVE
+async function saveData(){
+  await db.collection("users").doc(userId).set({
+    transactions,
+    history,
+    salary,
+    lastReset
+  });
+}
+
+// UI
+function updateUI(){
+  checkCycle();
+
+  const list = document.getElementById("list");
+  const hist = document.getElementById("history");
+
+  list.innerHTML = "";
+  hist.innerHTML = "";
+
+  let total=0, income=0, expenses=0;
+
+  transactions.forEach((t,i)=>{
+    total+=t.value;
+    if(t.value>0) income+=t.value;
+    else expenses+=t.value;
+
+    let statusBtn = "";
+
+    if (t.category === "Dívida") {
+      const color = t.status === "pendente" ? "bg-red-500" : "bg-green-500";
+      const text = t.status === "pendente" ? "Pendente" : "Pago";
+
+      statusBtn = `
+        <button onclick="toggleStatus(${i})"
+          class="${color} px-2 py-1 rounded text-xs font-bold ml-2">
+          ${text}
+        </button>
+      `;
+    }
+
+    const li = document.createElement("li");
+    li.className="flex justify-between items-center bg-gray-700 p-2 mt-1 rounded";
+
+    li.innerHTML = `
+      <span>${t.desc} (${t.category})</span>
+      <span>R$ ${t.value.toFixed(2)}</span>
+      ${statusBtn}
+      <button onclick="removeTransaction(${i})" class="text-red-400 ml-2">X</button>
+    `;
+
+    list.appendChild(li);
+  });
+
+  // HISTÓRICO AGRUPADO
+  const grouped = {};
+
+  history.forEach(h => {
+    if (!grouped[h.month]) grouped[h.month] = [];
+    grouped[h.month].push(h);
+  });
+
+  Object.keys(grouped).reverse().forEach(month => {
+    const title = document.createElement("h3");
+    title.className = "mt-3 font-bold text-yellow-400";
+    title.innerText = `📅 ${month}`;
+    hist.appendChild(title);
+
+    grouped[month].forEach(h => {
+      const li = document.createElement("li");
+      li.className = "text-sm text-gray-300";
+
+      li.innerText = `${h.desc} - R$ ${h.value} (${new Date(h.date).toLocaleString()})`;
+      hist.appendChild(li);
+    });
+  });
+
+  document.getElementById("income").innerText=income.toFixed(2);
+  document.getElementById("expenses").innerText=Math.abs(expenses).toFixed(2);
+  document.getElementById("balance").innerText=total.toFixed(2);
+
+  salary = parseFloat(document.getElementById("salary").value) || salary;
+  document.getElementById("salaryView").innerText = salary;
+
+  saveData();
+}
+
+// ADD
+function addTransaction(){
+  const desc = document.getElementById("desc").value;
+  const value = parseFloat(document.getElementById("value").value);
+  const category = document.getElementById("category").value;
+
+  if(!desc || isNaN(value)) return alert("Preencha tudo");
+
+  let obj = {
+    desc,
+    value,
+    category,
+    date: new Date()
+  };
+
+  if(category==="Dívida"){
+    obj.status="pendente";
+  }
+
+  transactions.push(obj);
+
+  document.getElementById("desc").value = "";
+  document.getElementById("value").value = "";
+
+  updateUI();
+}
+
+// TOGGLE STATUS
+function toggleStatus(i){
+  transactions[i].status =
+    transactions[i].status === "pendente" ? "pago" : "pendente";
+  updateUI();
+}
+
+// REMOVE
+function removeTransaction(i){
+  transactions.splice(i,1);
+  updateUI();
+}
+</script>
+</body>
+</html>
   <h2 class="text-xl mb-4">Menu</h2>
 
   <button onclick="login()" class="bg-green-600 w-full p-2 mb-2 rounded">Login</button>
