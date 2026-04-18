@@ -190,26 +190,31 @@ transactions.forEach((t,i)=>{
 
   let value = t.value;
 
-  // 🔴 status padrão dívida
+  // padrão dívida
   if(t.category === "Divida" && !t.status){
     t.status = "pendente";
   }
 
-  let isExpense = true;
+  let includeInBalance = true; // 🔥 novo controle
 
-  // 💡 REGRA DA DÍVIDA
+  // 💡 DÍVIDA
   if(t.category === "Divida"){
-    value = -Math.abs(value);
 
     if(t.status === "pendente"){
       debtRemaining += Math.abs(t.value);
-      isExpense = false;
+
+      // 🔴 NÃO entra no saldo ainda
+      includeInBalance = false;
+    } else {
+      // 🟢 pago → entra como gasto normal
+      value = -Math.abs(value);
     }
   }
 
-  total += value;
+  // 🔥 saldo só soma se permitido
+  if(includeInBalance){
+    total += value;
 
-  if(isExpense){
     if(value > 0) income += value;
     else expenses += value;
   }
