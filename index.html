@@ -143,12 +143,19 @@ overlay.classList.remove("hidden");
 
 // LOGIN
 function login(){
-const provider = new firebase.auth.GoogleAuthProvider();
-auth.signInWithPopup(provider);
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  auth.signInWithPopup(provider)
+    .catch(err => {
+      console.error("Erro login:", err);
+    });
 }
 
 function logout(){
-auth.signOut();
+  auth.signOut()
+    .catch(err => {
+      console.error("Erro logout:", err);
+    });
 }
 
 auth.onAuthStateChanged(user=>{
@@ -157,20 +164,24 @@ auth.onAuthStateChanged(user=>{
 
     document.getElementById("app").style.display = "block";
 
-    // 👤 mostra nome do usuário
+    // 👤 nome do usuário
     document.getElementById("userBox").classList.remove("hidden");
     document.getElementById("userName").innerText =
       user.displayName || "Usuário";
 
-    // ❌ esconde botão login
     document.getElementById("loginBtn").style.display = "none";
 
     loadData();
   } else {
-    // 🔁 reset visual quando sair
+    userId = null;
+
+    document.getElementById("app").style.display = "none";
+
     document.getElementById("userBox").classList.add("hidden");
     document.getElementById("loginBtn").style.display = "block";
-    document.getElementById("app").style.display = "none";
+
+    transactions = [];
+    history = [];
   }
 });
 
