@@ -190,18 +190,32 @@ transactions.forEach((t,i)=>{
 
   let value = t.value;
 
-  // dívida negativa
+  // 🔴 garante status padrão
+  if(t.category === "Divida" && !t.status){
+    t.status = "pendente";
+  }
+
+  // 💡 regra nova:
+  // só conta como gasto se for PAGO
+  let isExpense = true;
+
   if(t.category === "Divida"){
     value = -Math.abs(value);
-    if(!t.status) t.status = "pendente";
+
+    if(t.status === "pendente"){
+      // não entra em gastos ainda
+      isExpense = false;
+    }
   }
 
   total += value;
 
-  if(value > 0) income += value;
-  else expenses += value;
+  if(isExpense){
+    if(value > 0) income += value;
+    else expenses += value;
+  }
 
-  // 🔴 TAG DE STATUS
+  // 🔘 TAG
   let statusTag = "";
 
   if(t.category === "Divida"){
@@ -230,7 +244,8 @@ transactions.forEach((t,i)=>{
   `;
 
   list.appendChild(li);
-});
+}); 
+  
 document.getElementById("income").innerText = income.toFixed(2);
 document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
 document.getElementById("balance").innerText = total.toFixed(2);
