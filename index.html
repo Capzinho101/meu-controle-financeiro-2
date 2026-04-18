@@ -64,18 +64,28 @@ class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
 </div>
 
 <!-- RESUMO -->
-<div class="grid grid-cols-2 gap-4 mb-2 text-sm">
-  <div>Entradas: R$ <span id="income">0</span></div>
-  <div>Gastos: R$ <span id="expenses">0</span></div>
-  <div>Salário: R$ <span id="salaryView">0</span></div>
+<div class="grid grid-cols-2 gap-3 mb-2 text-sm">
 
-  <div id="debtBox" class="text-red-400 font-bold">
+  <div class="bg-gray-700 p-3 rounded-xl">
+    Entradas: R$ <span id="income">0</span>
+  </div>
+
+  <div class="bg-gray-700 p-3 rounded-xl">
+    Gastos: R$ <span id="expenses">0</span>
+  </div>
+
+  <div class="bg-gray-700 p-3 rounded-xl">
+    Salário: R$ <span id="salaryView">0</span>
+  </div>
+
+  <div class="bg-red-600/30 text-red-300 p-3 rounded-xl font-bold">
     Dívida restante: R$ <span id="debtRemaining">0</span>
   </div>
+
 </div>
 
 <!-- SALDO DESTACADO -->
-<div class="mt-4 p-4 bg-gray-700 rounded-xl text-center text-xl font-bold">
+<div class="mt-10 mb-6 p-5 bg-gray-800 border border-gray-600 rounded-2xl text-center text-2xl font-bold">
   Saldo: R$ <span id="balance">0</span>
 </div>
 
@@ -90,9 +100,12 @@ class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
 <script>
 // FIREBASE
 const firebaseConfig = {
-apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
-authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
-projectId: "meu-controle-financeiro-a0572",
+  apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
+  authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
+  projectId: "meu-controle-financeiro-a0572",
+  storageBucket: "meu-controle-financeiro-a0572.firebasestorage.app",
+  messagingSenderId: "202199536593",
+  appId: "1:202199536593:web:be012b0bd8c44b8c86c6f0"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -166,7 +179,6 @@ lastReset
 function updateUI(){
 
 const list = document.getElementById("list");
-
 list.innerHTML = "";
 
 let total = 0;
@@ -178,11 +190,9 @@ transactions.forEach((t,i)=>{
 
   let value = t.value;
 
-  // 🔴 DÍVIDA vira negativa automaticamente
   if(t.category === "Divida"){
     value = -Math.abs(value);
 
-    // só soma dívida pendente
     if(t.status === "pendente"){
       debtRemaining += Math.abs(t.value);
     }
@@ -205,7 +215,6 @@ transactions.forEach((t,i)=>{
   list.appendChild(li);
 });
 
-// RESUMO
 document.getElementById("income").innerText = income.toFixed(2);
 document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
 document.getElementById("balance").innerText = total.toFixed(2);
@@ -227,7 +236,8 @@ transactions.push({
 desc,
 value,
 category,
-date: new Date()
+date: new Date(),
+status: category === "Divida" ? "pendente" : null
 });
 
 document.getElementById("desc").value = "";
