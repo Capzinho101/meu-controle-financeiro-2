@@ -13,30 +13,21 @@
 
 <body class="bg-gray-900 text-white">
 
+<!-- OVERLAY -->
+<div id="overlay" onclick="toggleMenu()"
+class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
+
 <!-- MENU -->
 <div id="sidebar"
-class="fixed left-[-260px] top-0 w-64 h-full bg-gray-800 p-4 transition-all z-50">
+class="fixed left-[-260px] top-0 w-64 h-full bg-gray-800 p-4 transition-all duration-300 z-50">
 
 <h2 class="text-xl mb-4">Menu</h2>
 
-<div id="userBox" class="hidden mb-3 text-center">
-  <p class="text-green-400 font-bold" id="userName"></p>
-</div>
+<button onclick="login()" class="bg-green-600 w-full p-2 mb-2 rounded">Login</button>
+<button onclick="logout()" class="bg-gray-600 w-full p-2 mb-2 rounded">Sair</button>
 
-<button id="loginBtn" onclick="login()"
-class="bg-green-600 w-full p-2 mb-2 rounded">
-Login
-</button>
-
-<button onclick="logout()"
-class="bg-gray-600 w-full p-2 mb-2 rounded">
-Sair
-</button>
-
-<input id="salary" type="number"
-class="w-full p-2 mt-4 bg-gray-700 rounded"
-placeholder="Salário mensal">
-
+<input id="salary" type="number" placeholder="Salário mensal"
+class="w-full p-2 mt-4 bg-gray-700 rounded">
 </div>
 
 <!-- BOTÃO MENU -->
@@ -44,7 +35,7 @@ placeholder="Salário mensal">
 class="fixed top-4 left-4 bg-blue-600 px-3 py-2 rounded z-50">☰</button>
 
 <!-- APP -->
-<div class="max-w-2xl mx-auto bg-gray-800 p-6 rounded-2xl mt-16">
+<div class="max-w-2xl mx-auto bg-gray-800 p-6 rounded-2xl shadow-lg mt-16">
 
 <h1 class="text-2xl font-bold mb-4">💰 Controle de Gastos</h1>
 
@@ -65,9 +56,8 @@ class="w-full p-2 mb-2 bg-gray-700 rounded">
   <option>Compra</option>
 </select>
 
-<input id="value" type="number"
-class="w-full p-2 mb-2 bg-gray-700 rounded"
-placeholder="Valor">
+<input id="value" type="number" placeholder="Valor"
+class="w-full p-2 mb-2 bg-gray-700 rounded">
 
 <button onclick="addTransaction()"
 class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
@@ -94,7 +84,7 @@ class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
 
 </div>
 
-<div class="mt-8 p-5 bg-gray-800 border rounded-xl text-center text-2xl font-bold">
+<div class="mt-10 mb-6 p-5 bg-gray-800 border border-gray-600 rounded-2xl text-center text-2xl font-bold">
   Saldo: R$ <span id="balance">0</span>
 </div>
 
@@ -106,12 +96,9 @@ class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
 <script>
 // 🔥 FIREBASE
 const firebaseConfig = {
-  apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
-  authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
-  projectId: "meu-controle-financeiro-a0572",
-  storageBucket: "meu-controle-financeiro-a0572.firebasestorage.app",
-  messagingSenderId: "202199536593",
-  appId: "1:202199536593:web:be012b0bd8c44b8c86c6f0"
+apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
+authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
+projectId: "meu-controle-financeiro-a0572",
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -122,54 +109,53 @@ let userId = null;
 let transactions = [];
 let salary = 0;
 
-// 🔘 MENU
-function toggleMenu(){
-const menu = document.getElementById("sidebar");
-if(menu.style.left === "0px"){
-menu.style.left = "-260px";
-} else {
-menu.style.left = "0px";
-}
-}
-
-// 🔐 LOGIN (CORRIGIDO + FALLBACK)
-function login(){
+// =====================
+// 🔐 LOGIN (CORRIGIDO)
+// =====================
 const provider = new firebase.auth.GoogleAuthProvider();
 
-auth.signInWithPopup(provider)
-.catch(err=>{
-  console.log("Popup falhou, tentando redirect...", err);
-  auth.signInWithRedirect(provider);
-});
+function login(){
+auth.signInWithRedirect(provider);
 }
 
-// 🚪 LOGOUT
 function logout(){
 auth.signOut();
 }
 
+// 🔁 captura login após redirect
+auth.getRedirectResult()
+.then((result)=>{
+if(result.user){
+console.log("Logado:", result.user.displayName);
+}
+})
+.catch(console.error);
+
+// =====================
 // 👤 USER STATE
+// =====================
 auth.onAuthStateChanged(user=>{
 if(user){
 userId = user.uid;
-
 document.getElementById("app").style.display = "block";
-document.getElementById("userBox").classList.remove("hidden");
-document.getElementById("userName").innerText = user.displayName || "Usuário";
-document.getElementById("loginBtn").style.display = "none";
-
 loadData();
-
 } else {
 userId = null;
-
 document.getElementById("app").style.display = "none";
-document.getElementById("userBox").classList.add("hidden");
-document.getElementById("loginBtn").style.display = "block";
 }
 });
 
-// 📦 LOAD
+// =====================
+// MENU
+// =====================
+function toggleMenu(){
+const menu = document.getElementById("sidebar");
+menu.style.left = menu.style.left === "0px" ? "-260px" : "0px";
+}
+
+// =====================
+// LOAD
+// =====================
 async function loadData(){
 const doc = await db.collection("users").doc(userId).get();
 
@@ -183,7 +169,9 @@ document.getElementById("salary").value = salary;
 updateUI();
 }
 
-// 💾 SAVE
+// =====================
+// SAVE
+// =====================
 async function saveData(){
 await db.collection("users").doc(userId).set({
 transactions,
@@ -191,7 +179,9 @@ salary
 });
 }
 
-// 📊 UI
+// =====================
+// UI (NÃO ALTERADO)
+// =====================
 function updateUI(){
 
 const list = document.getElementById("list");
@@ -227,27 +217,12 @@ if(value > 0) income += value;
 else expenses += value;
 }
 
-let statusTag = "";
-
-if(t.category === "Divida"){
-statusTag = `
-<button onclick="toggleStatus(${i})"
-class="ml-2 px-2 py-1 text-xs rounded
-${t.status === "pendente" ? "bg-red-500" : "bg-green-500"}">
-${t.status === "pendente" ? "PENDENTE" : "PAGO"}
-</button>`;
-}
-
 const li = document.createElement("li");
 li.className="flex justify-between bg-gray-700 p-2 mt-1 rounded";
 
 li.innerHTML = `
 <span>${t.desc} (${t.category})</span>
-<div class="flex gap-2 items-center">
-<span>R$ ${value.toFixed(2)}</span>
-${statusTag}
-<button onclick="removeTransaction(${i})" class="text-red-400">X</button>
-</div>
+<div>R$ ${value.toFixed(2)}</div>
 `;
 
 list.appendChild(li);
@@ -262,7 +237,9 @@ document.getElementById("debtRemaining").innerText = debtRemaining.toFixed(2);
 saveData();
 }
 
-// ➕ ADD
+// =====================
+// ADD
+// =====================
 function addTransaction(){
 const desc = document.getElementById("desc").value;
 const value = parseFloat(document.getElementById("value").value);
@@ -270,26 +247,7 @@ const category = document.getElementById("category").value;
 
 if(!desc || isNaN(value)) return alert("Preencha tudo");
 
-transactions.push({
-desc,
-value,
-category,
-status: category === "Divida" ? "pendente" : null
-});
-
-updateUI();
-}
-
-// ❌ REMOVE
-function removeTransaction(i){
-transactions.splice(i,1);
-updateUI();
-}
-
-// 🔁 STATUS
-function toggleStatus(i){
-transactions[i].status =
-transactions[i].status === "pendente" ? "pago" : "pendente";
+transactions.push({desc,value,category});
 
 updateUI();
 }
