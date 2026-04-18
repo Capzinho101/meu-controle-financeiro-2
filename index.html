@@ -103,6 +103,7 @@ projectId: "meu-controle-financeiro-a0572",
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 const db = firebase.firestore();
 
 let userId = null;
@@ -114,8 +115,14 @@ let salary = 0;
 // =====================
 const provider = new firebase.auth.GoogleAuthProvider();
 
+const provider = new firebase.auth.GoogleAuthProvider();
+
 function login(){
-auth.signInWithRedirect(provider);
+  auth.signInWithRedirect(provider);
+}
+
+function logout(){
+  auth.signOut();
 }
 
 function logout(){
