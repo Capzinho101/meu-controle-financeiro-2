@@ -57,22 +57,42 @@
 <div class="mb-4">
   <input id="desc" placeholder="Descrição" class="w-full p-2 mb-2 bg-gray-700 rounded">
 
-  <select id="category" class="w-full p-2 mb-2 bg-gray-700 rounded">
-    <option>Alimentação</option>
-    <option>Transporte</option>
-    <option>Contas</option>
-    <option>Lazer</option>
+  <select id="category" onchange="toggleVendaFields()" class="w-full p-2 mb-2 bg-gray-700 rounded">
+    <option>Conta</option>
+    <option>Divida</option>
     <option>Outros</option>
-    <option>Dívida</option>
-    <option>Saldo</option>
-    <option>Luz</option>
+    <option>Vendas</option>
   </select>
 
-  <input id="value" type="number" placeholder="Valor" class="w-full p-2 mb-2 bg-gray-700 rounded">
+  <!-- VALOR NORMAL -->
+  <input id="value" type="number" placeholder="Valor"
+    class="w-full p-2 mb-2 bg-gray-700 rounded">
 
-  <button onclick="addTransaction()" class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
+  <!-- CAMPOS DE VENDA -->
+  <div id="vendaFields" class="hidden">
+
+    <input id="valorProduto" type="number" placeholder="Valor do produto"
+      class="w-full p-2 mb-2 bg-gray-700 rounded">
+
+    <input id="valorRecebido" type="number" placeholder="Valor recebido"
+      oninput="calcularTroco()"
+      class="w-full p-2 mb-2 bg-gray-700 rounded">
+
+    <select id="pagamento" class="w-full p-2 mb-2 bg-gray-700 rounded">
+      <option>Dinheiro</option>
+      <option>Débito</option>
+      <option>Crédito</option>
+      <option>Pix</option>
+    </select>
+
+    <p>Troco: R$ <span id="troco">0.00</span></p>
+
+  </div>
+
+  <button onclick="addTransaction()" class="bg-blue-600 w-full p-2 rounded">
+    Adicionar
+  </button>
 </div>
-
 <!-- RESUMO -->
 <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
   <div>Entradas: R$ <span id="income">0</span></div>
