@@ -24,8 +24,6 @@ class="fixed left-[-260px] top-0 w-64 h-full bg-gray-800 p-4 transition-all dura
 <button onclick="login()" class="bg-green-600 w-full p-2 mb-2 rounded">Login</button>
 <button onclick="logout()" class="bg-gray-600 w-full p-2 mb-2 rounded">Sair</button>
 
-<input id="salary" type="number" placeholder="Salário mensal"
-class="w-full p-2 mt-4 bg-gray-700 rounded">
 </div>
 
 <button onclick="toggleMenu()"
@@ -88,7 +86,6 @@ class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
 </div>
 
 <script>
-// 🔥 FIREBASE
 const firebaseConfig = {
 apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
 authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
@@ -104,51 +101,35 @@ let userId = null;
 let transactions = [];
 let salary = 0;
 
-// 🔥 IMPORTANTE: persistência correta
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-.catch(console.error);
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-// =====================
-// LOGIN CORRIGIDO
-// =====================
 const provider = new firebase.auth.GoogleAuthProvider();
 
 function login(){
-  auth.signInWithPopup(provider)
-    .then(result => {
-      console.log("Logado:", result.user.displayName);
-    })
-    .catch(console.error);
+  auth.signInWithPopup(provider);
 }
 
 function logout(){
   auth.signOut();
 }
 
-// =====================
-// ESTADO LOGIN (CORRIGIDO)
-// =====================
 auth.onAuthStateChanged(user=>{
   if(user){
     userId = user.uid;
     document.getElementById("app").style.display = "block";
     loadData();
   } else {
-    userId = null;
     document.getElementById("app").style.display = "none";
   }
 });
 
-// =====================
-// MENU
-// =====================
 function toggleMenu(){
   const menu = document.getElementById("sidebar");
   const overlay = document.getElementById("overlay");
 
-  const isOpen = menu.style.left === "0px";
+  const open = menu.style.left === "0px";
 
-  if(isOpen){
+  if(open){
     menu.style.left = "-260px";
     overlay.classList.add("hidden");
   } else {
@@ -157,25 +138,17 @@ function toggleMenu(){
   }
 }
 
-// =====================
-// LOAD
-// =====================
 async function loadData(){
 const doc = await db.collection("users").doc(userId).get();
-
 if(doc.exists){
-const d = doc.data();
-transactions = d.transactions || [];
-salary = d.salary || 0;
+  const d = doc.data();
+  transactions = d.transactions || [];
+  salary = d.salary || 0;
 }
 
-document.getElementById("salary").value = salary;
 updateUI();
 }
 
-// =====================
-// SAVE
-// =====================
 async function saveData(){
 await db.collection("users").doc(userId).set({
 transactions,
@@ -183,67 +156,17 @@ salary
 });
 }
 
-// =====================
-// UI
-// =====================
-function updateUI(){
-
-const list = document.getElementById("list");
-list.innerHTML = "";
-
-let total = 0;
-let income = 0;
-let expenses = 0;
-let debtRemaining = 0;
-
-transactions.forEach((t,i)=>{
-
-let value = t.value;
-
-if(t.category === "Divida" && !t.status){
-t.status = "pendente";
+function toggleStatus(i){
+  transactions[i].status =
+    transactions[i].status === "pendente" ? "pago" : "pendente";
+  updateUI();
 }
 
-let include = true;
-
-if(t.category === "Divida"){
-value = -Math.abs(value);
-
-if(t.status === "pendente"){
-debtRemaining += Math.abs(t.value);
-include = false;
-}
+function removeTransaction(i){
+  transactions.splice(i,1);
+  updateUI();
 }
 
-if(include){
-total += value;
-if(value > 0) income += value;
-else expenses += value;
-}
-
-const li = document.createElement("li");
-li.className="flex justify-between bg-gray-700 p-2 mt-1 rounded";
-
-li.innerHTML = `
-<span>${t.desc} (${t.category})</span>
-<div>R$ ${value.toFixed(2)}</div>
-`;
-
-list.appendChild(li);
-});
-
-document.getElementById("income").innerText = income.toFixed(2);
-document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
-document.getElementById("balance").innerText = total.toFixed(2);
-document.getElementById("salaryView").innerText = salary;
-document.getElementById("debtRemaining").innerText = debtRemaining.toFixed(2);
-
-saveData();
-}
-
-// =====================
-// ADD
-// =====================
 function addTransaction(){
 const desc = document.getElementById("desc").value;
 const value = parseFloat(document.getElementById("value").value);
@@ -262,6 +185,80 @@ document.getElementById("desc").value = "";
 document.getElementById("value").value = "";
 
 updateUI();
+}
+
+function updateUI(){
+
+const list = document.getElementById("list");
+list.innerHTML = "";
+
+let total = 0;
+let income = 0;
+let expenses = 0;
+let debtRemaining = 0;
+
+transactions.forEach((t,i)=>{
+
+let value = t.value;
+
+if(t.category === "Divida" && !t.status){
+t.status = "pendente";
+}
+
+let includeExpense = true;
+
+if(t.category === "Divida"){
+value = -Math.abs(value);
+
+if(t.status === "pendente"){
+debtRemaining += Math.abs(t.value);
+includeExpense = false;
+}
+}
+
+total += value;
+
+if(includeExpense){
+if(value > 0) income += value;
+else expenses += value;
+}
+
+let statusBtn = "";
+if(t.category === "Divida"){
+statusBtn = `
+<button onclick="toggleStatus(${i})"
+class="ml-2 px-2 py-1 text-xs rounded
+${t.status === "pendente" ? "bg-red-500" : "bg-green-500"}">
+${t.status === "pendente" ? "PENDENTE" : "PAGO"}
+</button>
+`;
+}
+
+const li = document.createElement("li");
+li.className="flex justify-between bg-gray-700 p-2 mt-1 rounded";
+
+li.innerHTML = `
+<div>
+${t.desc} (${t.category})
+${statusBtn}
+</div>
+
+<div class="flex gap-2">
+R$ ${value.toFixed(2)}
+<button onclick="removeTransaction(${i})" class="text-red-400">X</button>
+</div>
+`;
+
+list.appendChild(li);
+});
+
+document.getElementById("income").innerText = income.toFixed(2);
+document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
+document.getElementById("balance").innerText = total.toFixed(2);
+document.getElementById("salaryView").innerText = salary;
+document.getElementById("debtRemaining").innerText = debtRemaining.toFixed(2);
+
+saveData();
 }
 </script>
 
