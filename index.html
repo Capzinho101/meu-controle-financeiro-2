@@ -115,8 +115,6 @@ let salary = 0;
 // =====================
 const provider = new firebase.auth.GoogleAuthProvider();
 
-const provider = new firebase.auth.GoogleAuthProvider();
-
 function login(){
   auth.signInWithRedirect(provider);
 }
@@ -125,18 +123,8 @@ function logout(){
   auth.signOut();
 }
 
-function logout(){
-auth.signOut();
-}
-
 // 🔁 captura login após redirect
-auth.getRedirectResult()
-.then((result)=>{
-if(result.user){
-console.log("Logado:", result.user.displayName);
-}
-})
-.catch(console.error);
+auth.getRedirectResult().catch(console.error);
 
 // =====================
 // 👤 USER STATE
@@ -144,11 +132,8 @@ console.log("Logado:", result.user.displayName);
 auth.onAuthStateChanged(user=>{
   if(user){
     userId = user.uid;
-
     document.getElementById("app").style.display = "block";
-
     loadData();
-
   } else {
     userId = null;
     document.getElementById("app").style.display = "none";
@@ -156,20 +141,18 @@ auth.onAuthStateChanged(user=>{
 });
 
 // =====================
-// MENU
+// MENU (CORRIGIDO)
 // =====================
 function toggleMenu(){
   const menu = document.getElementById("sidebar");
   const overlay = document.getElementById("overlay");
 
-  const isOpen = menu.classList.contains("open");
+  const isOpen = menu.style.left === "0px";
 
   if(isOpen){
-    menu.classList.remove("open");
     menu.style.left = "-260px";
     overlay.classList.add("hidden");
   } else {
-    menu.classList.add("open");
     menu.style.left = "0px";
     overlay.classList.remove("hidden");
   }
@@ -202,7 +185,7 @@ salary
 }
 
 // =====================
-// UI (NÃO ALTERADO)
+// UI
 // =====================
 function updateUI(){
 
@@ -269,7 +252,15 @@ const category = document.getElementById("category").value;
 
 if(!desc || isNaN(value)) return alert("Preencha tudo");
 
-transactions.push({desc,value,category});
+transactions.push({
+desc,
+value,
+category,
+status: category === "Divida" ? "pendente" : null
+});
+
+document.getElementById("desc").value = "";
+document.getElementById("value").value = "";
 
 updateUI();
 }
