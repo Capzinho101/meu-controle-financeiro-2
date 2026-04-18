@@ -135,14 +135,17 @@ console.log("Logado:", result.user.displayName);
 // 👤 USER STATE
 // =====================
 auth.onAuthStateChanged(user=>{
-if(user){
-userId = user.uid;
-document.getElementById("app").style.display = "block";
-loadData();
-} else {
-userId = null;
-document.getElementById("app").style.display = "none";
-}
+  if(user){
+    userId = user.uid;
+
+    document.getElementById("app").style.display = "block";
+
+    loadData();
+
+  } else {
+    userId = null;
+    document.getElementById("app").style.display = "none";
+  }
 });
 
 // =====================
