@@ -13,30 +13,30 @@
 
 <body class="bg-gray-900 text-white">
 
-<!-- OVERLAY -->
-<div id="overlay" onclick="toggleMenu()"
-class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
-
 <!-- MENU -->
 <div id="sidebar"
-class="fixed left-[-260px] top-0 w-64 h-full bg-gray-800 p-4 transition-all duration-300 z-50">
+class="fixed left-[-260px] top-0 w-64 h-full bg-gray-800 p-4 transition-all z-50">
 
 <h2 class="text-xl mb-4">Menu</h2>
 
-<div id="userBox" class="mb-3 text-center hidden">
-  <p class="text-green-400 font-bold" id="userName">Usuário</p>
+<div id="userBox" class="hidden mb-3 text-center">
+  <p class="text-green-400 font-bold" id="userName"></p>
 </div>
 
-<button id="loginBtn" onclick="login()" class="bg-green-600 w-full p-2 mb-2 rounded">
-  Login
+<button id="loginBtn" onclick="login()"
+class="bg-green-600 w-full p-2 mb-2 rounded">
+Login
 </button>
 
-<button onclick="logout()" class="bg-gray-600 w-full p-2 mb-2 rounded">
-  Sair
+<button onclick="logout()"
+class="bg-gray-600 w-full p-2 mb-2 rounded">
+Sair
 </button>
 
-<input id="salary" type="number" placeholder="Salário mensal"
-class="w-full p-2 mt-4 bg-gray-700 rounded">
+<input id="salary" type="number"
+class="w-full p-2 mt-4 bg-gray-700 rounded"
+placeholder="Salário mensal">
+
 </div>
 
 <!-- BOTÃO MENU -->
@@ -44,7 +44,7 @@ class="w-full p-2 mt-4 bg-gray-700 rounded">
 class="fixed top-4 left-4 bg-blue-600 px-3 py-2 rounded z-50">☰</button>
 
 <!-- APP -->
-<div class="max-w-2xl mx-auto bg-gray-800 p-6 rounded-2xl shadow-lg mt-16">
+<div class="max-w-2xl mx-auto bg-gray-800 p-6 rounded-2xl mt-16">
 
 <h1 class="text-2xl font-bold mb-4">💰 Controle de Gastos</h1>
 
@@ -65,8 +65,9 @@ class="w-full p-2 mb-2 bg-gray-700 rounded">
   <option>Compra</option>
 </select>
 
-<input id="value" type="number" placeholder="Valor"
-class="w-full p-2 mb-2 bg-gray-700 rounded">
+<input id="value" type="number"
+class="w-full p-2 mb-2 bg-gray-700 rounded"
+placeholder="Valor">
 
 <button onclick="addTransaction()"
 class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
@@ -93,28 +94,21 @@ class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
 
 </div>
 
-<!-- SALDO DESTACADO -->
-<div class="mt-10 mb-6 p-5 bg-gray-800 border border-gray-600 rounded-2xl text-center text-2xl font-bold">
+<div class="mt-8 p-5 bg-gray-800 border rounded-xl text-center text-2xl font-bold">
   Saldo: R$ <span id="balance">0</span>
 </div>
 
 <ul id="list"></ul>
 
-<h2 class="mt-6 text-lg font-bold">📅 Histórico</h2>
-<ul id="history"></ul>
-
 </div>
 </div>
 
 <script>
-// FIREBASE
+// 🔥 FIREBASE
 const firebaseConfig = {
-  apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
-  authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
-  projectId: "meu-controle-financeiro-a0572",
-  storageBucket: "meu-controle-financeiro-a0572.firebasestorage.app",
-  messagingSenderId: "202199536593",
-  appId: "1:202199536593:web:be012b0bd8c44b8c86c6f0"
+apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
+authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
+projectId: "meu-controle-financeiro-a0572",
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -123,94 +117,78 @@ const db = firebase.firestore();
 
 let userId = null;
 let transactions = [];
-let history = [];
 let salary = 0;
-let lastReset = null;
 
-// MENU
+// 🔘 MENU
 function toggleMenu(){
 const menu = document.getElementById("sidebar");
-const overlay = document.getElementById("overlay");
-
 if(menu.style.left === "0px"){
 menu.style.left = "-260px";
-overlay.classList.add("hidden");
 } else {
 menu.style.left = "0px";
-overlay.classList.remove("hidden");
 }
 }
 
-// LOGIN
+// 🔐 LOGIN (CORRIGIDO + FALLBACK)
 function login(){
-  const provider = new firebase.auth.GoogleAuthProvider();
+const provider = new firebase.auth.GoogleAuthProvider();
 
-  auth.signInWithPopup(provider)
-    .catch(err => {
-      console.error("Erro login:", err);
-    });
-}
-
-function logout(){
-  auth.signOut()
-    .catch(err => {
-      console.error("Erro logout:", err);
-    });
-}
-
-auth.onAuthStateChanged(user=>{
-  if(user){
-    userId = user.uid;
-
-    document.getElementById("app").style.display = "block";
-
-    // 👤 nome do usuário
-    document.getElementById("userBox").classList.remove("hidden");
-    document.getElementById("userName").innerText =
-      user.displayName || "Usuário";
-
-    document.getElementById("loginBtn").style.display = "none";
-
-    loadData();
-  } else {
-    userId = null;
-
-    document.getElementById("app").style.display = "none";
-
-    document.getElementById("userBox").classList.add("hidden");
-    document.getElementById("loginBtn").style.display = "block";
-
-    transactions = [];
-    history = [];
-  }
+auth.signInWithPopup(provider)
+.catch(err=>{
+  console.log("Popup falhou, tentando redirect...", err);
+  auth.signInWithRedirect(provider);
 });
-  
-// LOAD
+}
+
+// 🚪 LOGOUT
+function logout(){
+auth.signOut();
+}
+
+// 👤 USER STATE
+auth.onAuthStateChanged(user=>{
+if(user){
+userId = user.uid;
+
+document.getElementById("app").style.display = "block";
+document.getElementById("userBox").classList.remove("hidden");
+document.getElementById("userName").innerText = user.displayName || "Usuário";
+document.getElementById("loginBtn").style.display = "none";
+
+loadData();
+
+} else {
+userId = null;
+
+document.getElementById("app").style.display = "none";
+document.getElementById("userBox").classList.add("hidden");
+document.getElementById("loginBtn").style.display = "block";
+}
+});
+
+// 📦 LOAD
 async function loadData(){
 const doc = await db.collection("users").doc(userId).get();
+
 if(doc.exists){
 const d = doc.data();
 transactions = d.transactions || [];
-history = d.history || [];
 salary = d.salary || 0;
-lastReset = d.lastReset || null;
 }
 
 document.getElementById("salary").value = salary;
 updateUI();
 }
 
-// SAVE
+// 💾 SAVE
 async function saveData(){
 await db.collection("users").doc(userId).set({
 transactions,
-history,
-salary,
-lastReset
+salary
 });
 }
 
-// UI
+// 📊 UI
 function updateUI(){
 
 const list = document.getElementById("list");
@@ -223,69 +201,55 @@ let debtRemaining = 0;
 
 transactions.forEach((t,i)=>{
 
-  let value = t.value;
+let value = t.value;
 
-  // padrão dívida
-  if(t.category === "Divida" && !t.status){
-    t.status = "pendente";
-  }
+if(t.category === "Divida" && !t.status){
+t.status = "pendente";
+}
 
-  let includeInBalance = true; // 🔥 novo controle
+let include = true;
 
-  // 💡 DÍVIDA
-  if(t.category === "Divida"){
+if(t.category === "Divida"){
+value = -Math.abs(value);
 
-    if(t.status === "pendente"){
-      debtRemaining += Math.abs(t.value);
+if(t.status === "pendente"){
+debtRemaining += Math.abs(t.value);
+include = false;
+}
+}
 
-      // 🔴 NÃO entra no saldo ainda
-      includeInBalance = false;
-    } else {
-      // 🟢 pago → entra como gasto normal
-      value = -Math.abs(value);
-    }
-  }
+if(include){
+total += value;
+if(value > 0) income += value;
+else expenses += value;
+}
 
-  // 🔥 saldo só soma se permitido
-  if(includeInBalance){
-    total += value;
+let statusTag = "";
 
-    if(value > 0) income += value;
-    else expenses += value;
-  }
+if(t.category === "Divida"){
+statusTag = `
+<button onclick="toggleStatus(${i})"
+class="ml-2 px-2 py-1 text-xs rounded
+${t.status === "pendente" ? "bg-red-500" : "bg-green-500"}">
+${t.status === "pendente" ? "PENDENTE" : "PAGO"}
+</button>`;
+}
 
-  // 🔘 TAG
-  let statusTag = "";
+const li = document.createElement("li");
+li.className="flex justify-between bg-gray-700 p-2 mt-1 rounded";
 
-  if(t.category === "Divida"){
-    const isPendente = t.status === "pendente";
+li.innerHTML = `
+<span>${t.desc} (${t.category})</span>
+<div class="flex gap-2 items-center">
+<span>R$ ${value.toFixed(2)}</span>
+${statusTag}
+<button onclick="removeTransaction(${i})" class="text-red-400">X</button>
+</div>
+`;
 
-    statusTag = `
-      <button onclick="toggleStatus(${i})"
-        class="ml-2 px-2 py-1 text-xs rounded font-bold
-        ${isPendente ? "bg-red-500" : "bg-green-500"}">
-        ${isPendente ? "PENDENTE" : "PAGO"}
-      </button>
-    `;
-  }
-
-  const li = document.createElement("li");
-  li.className="flex justify-between items-center bg-gray-700 p-2 mt-1 rounded";
-
-  li.innerHTML = `
-    <span>${t.desc} (${t.category})</span>
-
-    <div class="flex items-center gap-2">
-      <span>R$ ${value.toFixed(2)}</span>
-      ${statusTag}
-      <button onclick="removeTransaction(${i})" class="text-red-400 ml-2">X</button>
-    </div>
-  `;
-
-  list.appendChild(li);
+list.appendChild(li);
 });
 
-// 📊 RESUMO FINAL
 document.getElementById("income").innerText = income.toFixed(2);
 document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
 document.getElementById("balance").innerText = total.toFixed(2);
@@ -295,15 +259,7 @@ document.getElementById("debtRemaining").innerText = debtRemaining.toFixed(2);
 saveData();
 }
 
-// TAG DIVIDAS
-function toggleStatus(i){
-  transactions[i].status =
-    transactions[i].status === "pendente" ? "pago" : "pendente";
-
-  updateUI();
-}
-  
-// ADD
+// ➕ ADD
 function addTransaction(){
 const desc = document.getElementById("desc").value;
 const value = parseFloat(document.getElementById("value").value);
@@ -315,19 +271,23 @@ transactions.push({
 desc,
 value,
 category,
-date: new Date(),
 status: category === "Divida" ? "pendente" : null
 });
-
-document.getElementById("desc").value = "";
-document.getElementById("value").value = "";
 
 updateUI();
 }
 
-// REMOVE
+// ❌ REMOVE
 function removeTransaction(i){
 transactions.splice(i,1);
+updateUI();
+}
+
+// 🔁 STATUS
+function toggleStatus(i){
+transactions[i].status =
+transactions[i].status === "pendente" ? "pago" : "pendente";
+
 updateUI();
 }
 </script>
