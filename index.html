@@ -190,20 +190,22 @@ transactions.forEach((t,i)=>{
 
   let value = t.value;
 
-  // 🔴 garante status padrão
+  // 🔴 padrão
   if(t.category === "Divida" && !t.status){
     t.status = "pendente";
   }
 
-  // 💡 regra nova:
-  // só conta como gasto se for PAGO
   let isExpense = true;
 
+  // 💡 DÍVIDA LÓGICA PRINCIPAL
   if(t.category === "Divida"){
     value = -Math.abs(value);
 
     if(t.status === "pendente"){
-      // não entra em gastos ainda
+      // vai para dívida restante
+      debtRemaining += Math.abs(t.value);
+
+      // NÃO entra em gastos ainda
       isExpense = false;
     }
   }
@@ -215,7 +217,7 @@ transactions.forEach((t,i)=>{
     else expenses += value;
   }
 
-  // 🔘 TAG
+  // 🔘 TAG STATUS
   let statusTag = "";
 
   if(t.category === "Divida"){
@@ -244,7 +246,19 @@ transactions.forEach((t,i)=>{
   `;
 
   list.appendChild(li);
-}); 
+});
+
+// 📊 RESUMO
+document.getElementById("income").innerText = income.toFixed(2);
+document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
+document.getElementById("balance").innerText = total.toFixed(2);
+document.getElementById("salaryView").innerText = salary;
+
+// 💥 DÍVIDA RESTANTE AGORA FUNCIONA DE VERDADE
+document.getElementById("debtRemaining").innerText = debtRemaining.toFixed(2);
+
+saveData();
+}
   
 document.getElementById("income").innerText = income.toFixed(2);
 document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
