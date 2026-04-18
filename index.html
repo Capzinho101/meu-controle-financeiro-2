@@ -184,7 +184,7 @@ auth.onAuthStateChanged(user=>{
     history = [];
   }
 });
-
+  
 // LOAD
 async function loadData(){
 const doc = await db.collection("users").doc(userId).get();
