@@ -159,8 +159,20 @@ auth.onAuthStateChanged(user=>{
 // MENU
 // =====================
 function toggleMenu(){
-const menu = document.getElementById("sidebar");
-menu.style.left = menu.style.left === "0px" ? "-260px" : "0px";
+  const menu = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+
+  const isOpen = menu.classList.contains("open");
+
+  if(isOpen){
+    menu.classList.remove("open");
+    menu.style.left = "-260px";
+    overlay.classList.add("hidden");
+  } else {
+    menu.classList.add("open");
+    menu.style.left = "0px";
+    overlay.classList.remove("hidden");
+  }
 }
 
 // =====================
