@@ -190,12 +190,10 @@ transactions.forEach((t,i)=>{
 
   let value = t.value;
 
+  // dívida negativa
   if(t.category === "Divida"){
     value = -Math.abs(value);
-
-    if(t.status === "pendente"){
-      debtRemaining += Math.abs(t.value);
-    }
+    if(!t.status) t.status = "pendente";
   }
 
   total += value;
@@ -203,18 +201,36 @@ transactions.forEach((t,i)=>{
   if(value > 0) income += value;
   else expenses += value;
 
+  // 🔴 TAG DE STATUS
+  let statusTag = "";
+
+  if(t.category === "Divida"){
+    const isPendente = t.status === "pendente";
+
+    statusTag = `
+      <button onclick="toggleStatus(${i})"
+        class="ml-2 px-2 py-1 text-xs rounded font-bold
+        ${isPendente ? "bg-red-500" : "bg-green-500"}">
+        ${isPendente ? "PENDENTE" : "PAGO"}
+      </button>
+    `;
+  }
+
   const li = document.createElement("li");
   li.className="flex justify-between items-center bg-gray-700 p-2 mt-1 rounded";
 
   li.innerHTML = `
     <span>${t.desc} (${t.category})</span>
-    <span>R$ ${value.toFixed(2)}</span>
-    <button onclick="removeTransaction(${i})" class="text-red-400 ml-2">X</button>
+
+    <div class="flex items-center gap-2">
+      <span>R$ ${value.toFixed(2)}</span>
+      ${statusTag}
+      <button onclick="removeTransaction(${i})" class="text-red-400 ml-2">X</button>
+    </div>
   `;
 
   list.appendChild(li);
 });
-
 document.getElementById("income").innerText = income.toFixed(2);
 document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
 document.getElementById("balance").innerText = total.toFixed(2);
@@ -224,6 +240,14 @@ document.getElementById("debtRemaining").innerText = debtRemaining.toFixed(2);
 saveData();
 }
 
+// TAG DIVIDAS
+function toggleStatus(i){
+  transactions[i].status =
+    transactions[i].status === "pendente" ? "pago" : "pendente";
+
+  updateUI();
+}
+  
 // ADD
 function addTransaction(){
 const desc = document.getElementById("desc").value;
