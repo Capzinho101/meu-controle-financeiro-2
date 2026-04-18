@@ -47,10 +47,13 @@ class="fixed top-4 left-4 bg-blue-600 px-3 py-2 rounded z-50">☰</button>
 class="w-full p-2 mb-2 bg-gray-700 rounded">
 
 <select id="category" class="w-full p-2 mb-2 bg-gray-700 rounded">
-<option>Conta</option>
-<option>Divida</option>
-<option>Outros</option>
-<option>Vendas</option>
+  <option>Conta</option>
+  <option>Divida</option>
+  <option>Outros</option>
+  <option>Vendas</option>
+  <option>Água</option>
+  <option>Luz</option>
+  <option>Compra</option>
 </select>
 
 <input id="value" type="number" placeholder="Valor"
@@ -61,11 +64,19 @@ class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
 </div>
 
 <!-- RESUMO -->
-<div class="grid grid-cols-2 gap-4 mb-4 text-sm">
-<div>Entradas: R$ <span id="income">0</span></div>
-<div>Gastos: R$ <span id="expenses">0</span></div>
-<div>Saldo: R$ <span id="balance">0</span></div>
-<div>Salário: R$ <span id="salaryView">0</span></div>
+<div class="grid grid-cols-2 gap-4 mb-2 text-sm">
+  <div>Entradas: R$ <span id="income">0</span></div>
+  <div>Gastos: R$ <span id="expenses">0</span></div>
+  <div>Salário: R$ <span id="salaryView">0</span></div>
+
+  <div id="debtBox" class="text-red-400 font-bold">
+    Dívida restante: R$ <span id="debtRemaining">0</span>
+  </div>
+</div>
+
+<!-- SALDO DESTACADO -->
+<div class="mt-4 p-4 bg-gray-700 rounded-xl text-center text-xl font-bold">
+  Saldo: R$ <span id="balance">0</span>
 </div>
 
 <ul id="list"></ul>
@@ -155,38 +166,51 @@ lastReset
 function updateUI(){
 
 const list = document.getElementById("list");
-const hist = document.getElementById("history");
 
 list.innerHTML = "";
-hist.innerHTML = "";
 
 let total = 0;
 let income = 0;
 let expenses = 0;
+let debtRemaining = 0;
 
 transactions.forEach((t,i)=>{
-total += t.value;
-if(t.value > 0) income += t.value;
-else expenses += t.value;
 
-const li = document.createElement("li");
-li.className="flex justify-between items-center bg-gray-700 p-2 mt-1 rounded";
+  let value = t.value;
 
-li.innerHTML = `
-<span>${t.desc} (${t.category})</span>
-<span>R$ ${t.value.toFixed(2)}</span>
-<button onclick="removeTransaction(${i})" class="text-red-400 ml-2">X</button>
-`;
+  // 🔴 DÍVIDA vira negativa automaticamente
+  if(t.category === "Divida"){
+    value = -Math.abs(value);
 
-list.appendChild(li);
+    // só soma dívida pendente
+    if(t.status === "pendente"){
+      debtRemaining += Math.abs(t.value);
+    }
+  }
+
+  total += value;
+
+  if(value > 0) income += value;
+  else expenses += value;
+
+  const li = document.createElement("li");
+  li.className="flex justify-between items-center bg-gray-700 p-2 mt-1 rounded";
+
+  li.innerHTML = `
+    <span>${t.desc} (${t.category})</span>
+    <span>R$ ${value.toFixed(2)}</span>
+    <button onclick="removeTransaction(${i})" class="text-red-400 ml-2">X</button>
+  `;
+
+  list.appendChild(li);
 });
 
+// RESUMO
 document.getElementById("income").innerText = income.toFixed(2);
 document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
 document.getElementById("balance").innerText = total.toFixed(2);
-
-salary = parseFloat(document.getElementById("salary").value) || salary;
 document.getElementById("salaryView").innerText = salary;
+document.getElementById("debtRemaining").innerText = debtRemaining.toFixed(2);
 
 saveData();
 }
