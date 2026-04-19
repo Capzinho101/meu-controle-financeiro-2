@@ -216,11 +216,7 @@ list.innerHTML = "";
 transactions.forEach((t,i)=>{
 
 let v = t.value;
-
-if(t.category === "Divida"){
-v = -Math.abs(v);
-if(t.status === "pendente") debt += Math.abs(t.value);
-}
+let isDivida = t.category === "Divida";
 
 // entradas / gastos
 if (t.category === "Divida") {
