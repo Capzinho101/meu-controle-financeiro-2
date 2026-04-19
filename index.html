@@ -110,7 +110,11 @@ const provider = new firebase.auth.GoogleAuthProvider();
 
 // LOGIN
 function login(){
-  auth.signInWithRedirect(provider);
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+    .then(() => {
+      return auth.signInWithRedirect(provider);
+    })
+    .catch(console.error);
 }
 
 // LOGOUT
