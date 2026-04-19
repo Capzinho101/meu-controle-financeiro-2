@@ -95,7 +95,8 @@ projectId: "meu-controle-financeiro-a0572",
 };
 
 firebase.initializeApp(firebaseConfig);
-
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  
 const auth = firebase.auth();
 const db = firebase.firestore();
 
