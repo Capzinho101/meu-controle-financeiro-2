@@ -119,13 +119,22 @@ function logout(){
 auth.onAuthStateChanged(user=>{
   if(user){
     userId = user.uid;
+
     document.getElementById("app").style.display = "block";
+
+    // 👇 pega nome do usuário
+    const nome = user.displayName || user.email || "Usuário";
+
+    document.getElementById("userGreeting").innerText = `Olá, ${nome}`;
+
     loadData();
   } else {
+    userId = null;
     document.getElementById("app").style.display = "none";
+
+    document.getElementById("userGreeting").innerText = "";
   }
 });
-
 function toggleMenu(){
   const menu = document.getElementById("sidebar");
   const overlay = document.getElementById("overlay");
