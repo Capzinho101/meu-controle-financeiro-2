@@ -13,6 +13,7 @@
 
 <body class="bg-gray-900 text-white">
 
+<!-- MENU -->
 <div id="overlay" onclick="toggleMenu()"
 class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
 
@@ -29,14 +30,16 @@ class="fixed left-[-260px] top-0 w-64 h-full bg-gray-800 p-4 transition-all dura
 <button onclick="toggleMenu()"
 class="fixed top-4 left-4 bg-blue-600 px-3 py-2 rounded z-50">☰</button>
 
+<!-- APP -->
 <div class="max-w-2xl mx-auto bg-gray-800 p-6 rounded-2xl shadow-lg mt-16">
-  
+
 <div id="userGreeting" class="mb-2 text-sm text-gray-300"></div>
 
 <h1 class="text-2xl font-bold mb-4">💰 Controle de Gastos</h1>
 
 <div id="app" style="display:none;">
 
+<!-- INPUT -->
 <div class="mb-4">
 <input id="desc" placeholder="Descrição"
 class="w-full p-2 mb-2 bg-gray-700 rounded">
@@ -59,29 +62,24 @@ class="w-full p-2 mb-2 bg-gray-700 rounded">
 class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
 </div>
 
+<!-- RESUMO -->
 <div class="grid grid-cols-2 gap-3 mb-2 text-sm">
-  <div class="bg-gray-700 p-3 rounded-xl">
-    Entradas: R$ <span id="income">0</span>
-  </div>
-
-  <div class="bg-gray-700 p-3 rounded-xl">
-    Gastos: R$ <span id="expenses">0</span>
-  </div>
-
-  <div class="bg-gray-700 p-3 rounded-xl">
-    Salário: R$ <span id="salaryView">0</span>
-  </div>
-
+  <div class="bg-gray-700 p-3 rounded-xl">Entradas: R$ <span id="income">0</span></div>
+  <div class="bg-gray-700 p-3 rounded-xl">Gastos: R$ <span id="expenses">0</span></div>
+  <div class="bg-gray-700 p-3 rounded-xl">Salário: R$ <span id="salaryView">0</span></div>
   <div class="bg-red-600/30 text-red-300 p-3 rounded-xl font-bold">
-    Dívida restante: R$ <span id="debtRemaining">0</span>
+    Dívida: R$ <span id="debtRemaining">0</span>
   </div>
 </div>
 
-<div class="mt-10 mb-6 p-5 bg-gray-800 border border-gray-600 rounded-2xl text-center text-2xl font-bold">
+<div class="mt-6 mb-6 p-5 bg-gray-800 border border-gray-600 rounded-2xl text-center text-2xl font-bold">
   Saldo: R$ <span id="balance">0</span>
 </div>
 
 <ul id="list"></ul>
+
+<!-- HISTÓRICO -->
+<div id="historyList" class="mt-6"></div>
 
 </div>
 </div>
@@ -102,17 +100,8 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let userId = null;
-let transactions = [];
-let salary = 0;
-let history = {};
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
 
-const provider = new firebase.auth.GoogleAuthProvider();
-
-// persistência (segura)
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-  .catch(console.error);
-  
 let userId = null;
 let transactions = [];
 let salary = 0;
@@ -122,20 +111,7 @@ const provider = new firebase.auth.GoogleAuthProvider();
 
 // LOGIN
 function login(){
-  auth.signInWithRedirect(provider);
-    .then(result => {
-      const user = result.user;
-
-      // mostra nome imediatamente
-      const nome = user.displayName || user.email || "Usuário";
-      document.getElementById("userGreeting").innerText = `Olá, ${nome}`;
-
-      console.log("Logado:", nome);
-    })
-    .catch(error => {
-      console.error(error);
-      alert("Erro no login: " + error.message);
-    });
+  auth.signInWithRedirect(provider).catch(console.error);
 }
 
 // LOGOUT
@@ -143,30 +119,28 @@ function logout(){
   auth.signOut();
 }
 
-// ESTADO DO USUÁRIO
+// ESTADO LOGIN
 auth.onAuthStateChanged(user=>{
   const loginBtn = document.getElementById("loginBtn");
   const logoutBtn = document.getElementById("logoutBtn");
 
   if(user){
     userId = user.uid;
+
     document.getElementById("app").style.display = "block";
+    document.getElementById("userGreeting").innerText =
+      `Olá, ${user.displayName || user.email}`;
 
-    const nome = user.displayName || user.email || "Usuário";
-    document.getElementById("userGreeting").innerText = `Olá, ${nome}`;
-
-    // 👇 ESCONDE LOGIN / MOSTRA SAIR
     loginBtn.style.display = "none";
     logoutBtn.style.display = "block";
 
     loadData();
-
   } else {
     userId = null;
+
     document.getElementById("app").style.display = "none";
     document.getElementById("userGreeting").innerText = "";
 
-    // 👇 MOSTRA LOGIN / ESCONDE SAIR
     loginBtn.style.display = "block";
     logoutBtn.style.display = "none";
   }
@@ -190,19 +164,18 @@ function toggleMenu(){
 
 // LOAD
 async function loadData(){
-const doc = await db.collection("users").doc(userId).get();
-if(doc.exists){
-  const d = doc.data();
-  transactions = d.transactions || [];
-  salary = d.salary || 0;
-  history = d.history || {};
-}
-updateUI();
+  const doc = await db.collection("users").doc(userId).get();
+  if(doc.exists){
+    const d = doc.data();
+    transactions = d.transactions || [];
+    salary = d.salary || 0;
+    history = d.history || {};
+  }
+  updateUI();
 }
 
 // SAVE
 async function saveData(){
-
   const now = new Date();
   const monthKey = `${now.getFullYear()}-${now.getMonth()+1}`;
 
@@ -213,6 +186,31 @@ async function saveData(){
     salary,
     history
   });
+}
+
+// ADD
+function addTransaction(){
+  const desc = document.getElementById("desc").value;
+  let value = parseFloat(document.getElementById("value").value);
+  const category = document.getElementById("category").value;
+
+  if(!desc || isNaN(value)) return alert("Preencha tudo");
+
+  if(category === "Saldo"){
+    value = Math.abs(value);
+  }
+
+  transactions.push({
+    desc,
+    value,
+    category,
+    status: category === "Divida" ? "pendente" : null
+  });
+
+  document.getElementById("desc").value = "";
+  document.getElementById("value").value = "";
+
+  updateUI();
 }
 
 // STATUS
@@ -226,31 +224,6 @@ function toggleStatus(i){
 function removeTransaction(i){
   transactions.splice(i,1);
   updateUI();
-}
-
-// ADD
-function addTransaction(){
-const desc = document.getElementById("desc").value;
-let value = parseFloat(document.getElementById("value").value);
-const category = document.getElementById("category").value;
-
-if(!desc || isNaN(value)) return alert("Preencha tudo");
-
-if(category === "Saldo"){
-  value = Math.abs(value);
-}
-
-transactions.push({
-  desc,
-  value,
-  category,
-  status: category === "Divida" ? "pendente" : null
-});
-
-document.getElementById("desc").value = "";
-document.getElementById("value").value = "";
-
-updateUI();
 }
 
 // UI
@@ -272,14 +245,14 @@ if(t.category === "Divida" && !t.status){
 t.status = "pendente";
 }
 
-let includeExpense = true;
+let include = true;
 
 if(t.category === "Divida"){
 value = -Math.abs(value);
 
 if(t.status === "pendente"){
 debtRemaining += Math.abs(t.value);
-includeExpense = false;
+include = false;
 }
 }
 
@@ -287,7 +260,7 @@ if(t.category !== "Divida" || t.status === "pago"){
   total += value;
 }
 
-if(includeExpense){
+if(include){
   if(value > 0) income += value;
   else expenses += value;
 }
@@ -303,42 +276,47 @@ ${t.status === "pendente" ? "PENDENTE" : "PAGO"}
 `;
 }
 
+const li = document.createElement("li");
+li.className="flex justify-between bg-gray-700 p-2 mt-1 rounded";
 
-// atualiza totais na tela
+li.innerHTML = `
+<div>${t.desc} (${t.category}) ${statusBtn}</div>
+<div class="flex gap-2">
+R$ ${value.toFixed(2)}
+<button onclick="removeTransaction(${i})" class="text-red-400">X</button>
+</div>
+`;
+
+list.appendChild(li);
+});
+
+// totals
 document.getElementById("income").innerText = income.toFixed(2);
 document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
 document.getElementById("balance").innerText = total.toFixed(2);
 document.getElementById("salaryView").innerText = salary;
 document.getElementById("debtRemaining").innerText = debtRemaining.toFixed(2);
 
-// salva no firebase
 saveData();
 
-
-// ===== HISTÓRICO MENSAL =====
+// HISTÓRICO
 const historyDiv = document.getElementById("historyList");
-if (historyDiv) {
-  historyDiv.innerHTML = "";
+historyDiv.innerHTML = "";
 
-  for (const month in history) {
-    const totalMes = history[month].reduce((acc, t) => {
-      if (t.category === "Divida" && t.status === "pendente") return acc;
+for(const month in history){
+  const totalMes = history[month].reduce((acc,t)=>{
+    if(t.category==="Divida" && t.status==="pendente") return acc;
+    let v = t.value;
+    if(t.category==="Divida") v = -Math.abs(v);
+    return acc + v;
+  },0);
 
-      let v = t.value;
-      if (t.category === "Divida") v = -Math.abs(v);
-
-      return acc + v;
-    }, 0);
-
-    const el = document.createElement("div");
-    el.className = "bg-gray-700 p-2 mt-1 rounded";
-    el.innerText = `${month} → Saldo: R$ ${totalMes.toFixed(2)}`;
-
-    historyDiv.appendChild(el);
-  }
+  const el = document.createElement("div");
+  el.className="bg-gray-700 p-2 mt-1 rounded";
+  el.innerText = `${month} → R$ ${totalMes.toFixed(2)}`;
+  historyDiv.appendChild(el);
 }
 }
-                     
 </script>
 
 </body>
