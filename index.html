@@ -1,3 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Controle de Gastos</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+</head>
+
+<body class="bg-gray-900 text-white">
+
+<div id="overlay" onclick="toggleMenu()"
+class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
+
+<div id="sidebar"
+class="fixed left-[-260px] top-0 w-64 h-full bg-gray-800 p-4 transition-all duration-300 z-50">
+
+<h2 class="text-xl mb-4">Menu</h2>
+
+<button onclick="login()" class="bg-green-600 w-full p-2 mb-2 rounded">Login</button>
+<button onclick="logout()" class="bg-gray-600 w-full p-2 mb-2 rounded">Sair</button>
+
+</div>
+
+<button onclick="toggleMenu()"
+class="fixed top-4 left-4 bg-blue-600 px-3 py-2 rounded z-50">☰</button>
+
+<div class="max-w-2xl mx-auto bg-gray-800 p-6 rounded-2xl shadow-lg mt-16">
+  
+<div id="userGreeting" class="mb-2 text-sm text-gray-300"></div>
+
+<h1 class="text-2xl font-bold mb-4">💰 Controle de Gastos</h1>
+
+<div id="app" style="display:none;">
+
+<div class="mb-4">
+<input id="desc" placeholder="Descrição"
+class="w-full p-2 mb-2 bg-gray-700 rounded">
+
+<select id="category" class="w-full p-2 mb-2 bg-gray-700 rounded">
+  <option>Conta</option>
+  <option>Divida</option>
+  <option>Outros</option>
+  <option>Vendas</option>
+  <option>Água</option>
+  <option>Luz</option>
+  <option>Compra</option>
+  <option>Saldo</option>
+</select>
+
+<input id="value" type="number" placeholder="Valor"
+class="w-full p-2 mb-2 bg-gray-700 rounded">
+
+<button onclick="addTransaction()"
+class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
+</div>
+
+<div class="grid grid-cols-2 gap-3 mb-2 text-sm">
+
+  <div class="bg-gray-700 p-3 rounded-xl">
+    Entradas: R$ <span id="income">0</span>
+  </div>
+
+  <div class="bg-gray-700 p-3 rounded-xl">
+    Gastos: R$ <span id="expenses">0</span>
+  </div>
+
+  <div class="bg-gray-700 p-3 rounded-xl">
+    Salário: R$ <span id="salaryView">0</span>
+  </div>
+
+  <div class="bg-red-600/30 text-red-300 p-3 rounded-xl font-bold">
+    Dívida restante: R$ <span id="debtRemaining">0</span>
+  </div>
+
+</div>
+
+<div class="mt-10 mb-6 p-5 bg-gray-800 border border-gray-600 rounded-2xl text-center text-2xl font-bold">
+  Saldo: R$ <span id="balance">0</span>
+</div>
+
+<ul id="list"></ul>
+
+</div>
+</div>
+
+<script>
+const firebaseConfig = {
+apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
+authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
+projectId: "meu-controle-financeiro-a0572",
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let userId = null;
+let transactions = [];
+let salary = 0;
+
 <script>
 const firebaseConfig = {
 apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
@@ -58,3 +164,151 @@ auth.onAuthStateChanged(user=>{
     document.getElementById("userGreeting").innerText = "";
   }
 });
+function toggleMenu(){
+  const menu = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+
+  const open = menu.style.left === "0px";
+
+  if(open){
+    menu.style.left = "-260px";
+    overlay.classList.add("hidden");
+  } else {
+    menu.style.left = "0px";
+    overlay.classList.remove("hidden");
+  }
+}
+
+async function loadData(){
+const doc = await db.collection("users").doc(userId).get();
+if(doc.exists){
+  const d = doc.data();
+  transactions = d.transactions || [];
+  salary = d.salary || 0;
+}
+
+updateUI();
+}
+
+async function saveData(){
+await db.collection("users").doc(userId).set({
+transactions,
+salary
+});
+}
+// TOGGLESTATUS
+function toggleStatus(i){
+  transactions[i].status =
+    transactions[i].status === "pendente" ? "pago" : "pendente";
+  updateUI();
+}
+// REMOVE TRANSACTION
+function removeTransaction(i){
+  transactions.splice(i,1);
+  updateUI();
+}
+// ADD TRANSCTION
+function addTransaction(){
+const desc = document.getElementById("desc").value;
+let value = parseFloat(document.getElementById("value").value);
+const category = document.getElementById("category").value;
+
+if(!desc || isNaN(value)) return alert("Preencha tudo");
+
+// 💰 SALDO sempre positivo
+if(category === "Saldo"){
+  value = Math.abs(value);
+}
+
+// 🔴 DÍVIDA continua normal (status pendente)
+transactions.push({
+  desc,
+  value,
+  category,
+  status: category === "Divida" ? "pendente" : null
+});
+
+document.getElementById("desc").value = "";
+document.getElementById("value").value = "";
+
+updateUI();
+}
+
+function updateUI(){
+
+const list = document.getElementById("list");
+list.innerHTML = "";
+
+let total = 0;
+let income = 0;
+let expenses = 0;
+let debtRemaining = 0;
+
+transactions.forEach((t,i)=>{
+
+let value = t.value;
+
+if(t.category === "Divida" && !t.status){
+t.status = "pendente";
+}
+
+let includeExpense = true;
+
+if(t.category === "Divida"){
+value = -Math.abs(value);
+
+if(t.status === "pendente"){
+debtRemaining += Math.abs(t.value);
+includeExpense = false;
+}
+}
+
+if(t.category !== "Divida" || t.status === "pago"){
+  total += value;
+}
+
+if(includeExpense){
+  if(value > 0) income += value;
+  else expenses += value;
+}
+let statusBtn = "";
+if(t.category === "Divida"){
+statusBtn = `
+<button onclick="toggleStatus(${i})"
+class="ml-2 px-2 py-1 text-xs rounded
+${t.status === "pendente" ? "bg-red-500" : "bg-green-500"}">
+${t.status === "pendente" ? "PENDENTE" : "PAGO"}
+</button>
+`;
+}
+
+const li = document.createElement("li");
+li.className="flex justify-between bg-gray-700 p-2 mt-1 rounded";
+
+li.innerHTML = `
+<div>
+${t.desc} (${t.category})
+${statusBtn}
+</div>
+
+<div class="flex gap-2">
+R$ ${value.toFixed(2)}
+<button onclick="removeTransaction(${i})" class="text-red-400">X</button>
+</div>
+`;
+
+list.appendChild(li);
+});
+
+document.getElementById("income").innerText = income.toFixed(2);
+document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
+document.getElementById("balance").innerText = total.toFixed(2);
+document.getElementById("salaryView").innerText = salary;
+document.getElementById("debtRemaining").innerText = debtRemaining.toFixed(2);
+
+saveData();
+}
+</script>
+
+</body>
+</html>
