@@ -21,8 +21,8 @@ class="fixed left-[-260px] top-0 w-64 h-full bg-gray-800 p-4 transition-all dura
 
 <h2 class="text-xl mb-4">Menu</h2>
 
-<button onclick="login()" class="bg-green-600 w-full p-2 mb-2 rounded">Login</button>
-<button onclick="logout()" class="bg-gray-600 w-full p-2 mb-2 rounded">Sair</button>
+<button id="loginBtn" onclick="login()" class="bg-green-600 w-full p-2 mb-2 rounded">Login</button>
+<button id="logoutBtn" onclick="logout()" class="bg-gray-600 w-full p-2 mb-2 rounded">Sair</button>
 
 </div>
 
@@ -107,7 +107,7 @@ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 let userId = null;
 let transactions = [];
 let salary = 0;
-
+let history = {};
 
 const provider = new firebase.auth.GoogleAuthProvider();
 
@@ -136,6 +136,9 @@ function logout(){
 
 // ESTADO DO USUÁRIO
 auth.onAuthStateChanged(user=>{
+  const loginBtn = document.getElementById("loginBtn");
+  const logoutBtn = document.getElementById("logoutBtn");
+
   if(user){
     userId = user.uid;
     document.getElementById("app").style.display = "block";
@@ -143,11 +146,20 @@ auth.onAuthStateChanged(user=>{
     const nome = user.displayName || user.email || "Usuário";
     document.getElementById("userGreeting").innerText = `Olá, ${nome}`;
 
+    // 👇 ESCONDE LOGIN / MOSTRA SAIR
+    loginBtn.style.display = "none";
+    logoutBtn.style.display = "block";
+
     loadData();
+
   } else {
     userId = null;
     document.getElementById("app").style.display = "none";
     document.getElementById("userGreeting").innerText = "";
+
+    // 👇 MOSTRA LOGIN / ESCONDE SAIR
+    loginBtn.style.display = "block";
+    logoutBtn.style.display = "none";
   }
 });
 
@@ -174,16 +186,24 @@ if(doc.exists){
   const d = doc.data();
   transactions = d.transactions || [];
   salary = d.salary || 0;
+  history = d.history || {};
 }
 updateUI();
 }
 
 // SAVE
 async function saveData(){
-await db.collection("users").doc(userId).set({
-transactions,
-salary
-});
+
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${now.getMonth()+1}`;
+
+  history[monthKey] = [...transactions];
+
+  await db.collection("users").doc(userId).set({
+    transactions,
+    salary,
+    history
+  });
 }
 
 // STATUS
@@ -274,23 +294,6 @@ ${t.status === "pendente" ? "PENDENTE" : "PAGO"}
 `;
 }
 
-const li = document.createElement("li");
-li.className="flex justify-between bg-gray-700 p-2 mt-1 rounded";
-
-li.innerHTML = `
-<div>
-${t.desc} (${t.category})
-${statusBtn}
-</div>
-
-<div class="flex gap-2">
-R$ ${value.toFixed(2)}
-<button onclick="removeTransaction(${i})" class="text-red-400">X</button>
-</div>
-`;
-
-list.appendChild(li);
-});
 
 document.getElementById("income").innerText = income.toFixed(2);
 document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
@@ -299,6 +302,26 @@ document.getElementById("salaryView").innerText = salary;
 document.getElementById("debtRemaining").innerText = debtRemaining.toFixed(2);
 
 saveData();
+
+// HISTORICO MENSAL
+const historyDiv = document.getElementById("historyList");
+historyDiv.innerHTML = "";
+
+for(const month in history){
+  const totalMes = history[month].reduce((acc, t)=>{
+    if(t.category === "Divida" && t.status === "pendente") return acc;
+    
+    let v = t.value;
+    if(t.category === "Divida") v = -Math.abs(v);
+
+    return acc + v;
+  },0);
+
+  const el = document.createElement("div");
+  el.className = "bg-gray-700 p-2 mt-1 rounded";
+  el.innerText = `${month} → Saldo: R$ ${totalMes.toFixed(2)}`;
+
+  historyDiv.appendChild(el);
 }
 </script>
 
