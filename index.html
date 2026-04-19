@@ -60,7 +60,6 @@ class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
 </div>
 
 <div class="grid grid-cols-2 gap-3 mb-2 text-sm">
-
   <div class="bg-gray-700 p-3 rounded-xl">
     Entradas: R$ <span id="income">0</span>
   </div>
@@ -76,7 +75,6 @@ class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
   <div class="bg-red-600/30 text-red-300 p-3 rounded-xl font-bold">
     Dívida restante: R$ <span id="debtRemaining">0</span>
   </div>
-
 </div>
 
 <div class="mt-10 mb-6 p-5 bg-gray-800 border border-gray-600 rounded-2xl text-center text-2xl font-bold">
@@ -89,6 +87,7 @@ class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
 </div>
 
 <script>
+// 🔥 FIREBASE (APENAS UMA VEZ)
 const firebaseConfig = {
 apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
 authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
@@ -104,29 +103,12 @@ let userId = null;
 let transactions = [];
 let salary = 0;
 
-<script>
-const firebaseConfig = {
-apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
-authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
-projectId: "meu-controle-financeiro-a0572",
-};
-
-firebase.initializeApp(firebaseConfig);
-
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-let userId = null;
-let transactions = [];
-let salary = 0;
-
-// 🔥 PERSISTÊNCIA (MANTÉM LOGIN)
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-.catch(console.error);
+// 🔐 MANTÉM LOGIN
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
 const provider = new firebase.auth.GoogleAuthProvider();
 
-// ✅ LOGIN (AGORA FUNCIONA SEM FALHAR)
+// LOGIN
 function login(){
   auth.signInWithRedirect(provider);
 }
@@ -136,34 +118,27 @@ function logout(){
   auth.signOut();
 }
 
-// 🔁 CAPTURA LOGIN APÓS REDIRECT (ESSENCIAL)
-auth.getRedirectResult()
-.then(result => {
-  if(result.user){
-    console.log("Logado:", result.user.displayName);
-  }
-})
-.catch(console.error);
+// CAPTURA LOGIN
+auth.getRedirectResult().catch(console.error);
 
-// ✅ ESTADO DO USUÁRIO
+// ESTADO DO USUÁRIO
 auth.onAuthStateChanged(user=>{
   if(user){
     userId = user.uid;
-
     document.getElementById("app").style.display = "block";
 
     const nome = user.displayName || user.email || "Usuário";
     document.getElementById("userGreeting").innerText = `Olá, ${nome}`;
 
     loadData();
-
   } else {
     userId = null;
-
     document.getElementById("app").style.display = "none";
     document.getElementById("userGreeting").innerText = "";
   }
 });
+
+// MENU
 function toggleMenu(){
   const menu = document.getElementById("sidebar");
   const overlay = document.getElementById("overlay");
@@ -179,6 +154,7 @@ function toggleMenu(){
   }
 }
 
+// LOAD
 async function loadData(){
 const doc = await db.collection("users").doc(userId).get();
 if(doc.exists){
@@ -186,28 +162,31 @@ if(doc.exists){
   transactions = d.transactions || [];
   salary = d.salary || 0;
 }
-
 updateUI();
 }
 
+// SAVE
 async function saveData(){
 await db.collection("users").doc(userId).set({
 transactions,
 salary
 });
 }
-// TOGGLESTATUS
+
+// STATUS
 function toggleStatus(i){
   transactions[i].status =
     transactions[i].status === "pendente" ? "pago" : "pendente";
   updateUI();
 }
-// REMOVE TRANSACTION
+
+// DELETE
 function removeTransaction(i){
   transactions.splice(i,1);
   updateUI();
 }
-// ADD TRANSCTION
+
+// ADD
 function addTransaction(){
 const desc = document.getElementById("desc").value;
 let value = parseFloat(document.getElementById("value").value);
@@ -215,12 +194,10 @@ const category = document.getElementById("category").value;
 
 if(!desc || isNaN(value)) return alert("Preencha tudo");
 
-// 💰 SALDO sempre positivo
 if(category === "Saldo"){
   value = Math.abs(value);
 }
 
-// 🔴 DÍVIDA continua normal (status pendente)
 transactions.push({
   desc,
   value,
@@ -234,6 +211,7 @@ document.getElementById("value").value = "";
 updateUI();
 }
 
+// UI
 function updateUI(){
 
 const list = document.getElementById("list");
@@ -271,6 +249,7 @@ if(includeExpense){
   if(value > 0) income += value;
   else expenses += value;
 }
+
 let statusBtn = "";
 if(t.category === "Divida"){
 statusBtn = `
