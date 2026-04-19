@@ -131,9 +131,6 @@ function logout(){
   auth.signOut();
 }
 
-// CAPTURA LOGIN
-auth.getRedirectResult().catch(console.error);
-
 // ESTADO DO USUÁRIO
 auth.onAuthStateChanged(user=>{
   if(user){
