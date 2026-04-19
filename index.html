@@ -5,6 +5,7 @@
 <title>Controle de Gastos</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
+
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -12,56 +13,78 @@
 
 <body class="bg-gray-900 text-white">
 
-<div id="overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
+<div id="overlay" onclick="toggleMenu()"
+class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
 
-<!-- MENU -->
-<div id="sidebar" class="fixed left-[-260px] top-0 w-64 h-full bg-gray-800 p-4 transition-all duration-300 z-50">
+<div id="sidebar"
+class="fixed left-[-260px] top-0 w-64 h-full bg-gray-800 p-4 transition-all duration-300 z-50">
 
 <h2 class="text-xl mb-4">Menu</h2>
 
 <button id="loginBtn" onclick="login()" class="bg-green-600 w-full p-2 mb-2 rounded">Login</button>
 <button id="logoutBtn" onclick="logout()" class="bg-gray-600 w-full p-2 mb-2 rounded">Sair</button>
 
-<hr class="my-3 border-gray-600">
-
+<!-- HISTÓRICO -->
+<div class="mt-4">
 <h3 class="text-sm mb-2">Histórico Mensal</h3>
 <div id="historyList" class="text-sm"></div>
+</div>
 
 </div>
 
-<button onclick="toggleMenu()" class="fixed top-4 left-4 bg-blue-600 px-3 py-2 rounded z-50">☰</button>
+<button onclick="toggleMenu()"
+class="fixed top-4 left-4 bg-blue-600 px-3 py-2 rounded z-50">☰</button>
 
-<!-- CONTEÚDO -->
 <div class="max-w-2xl mx-auto bg-gray-800 p-6 rounded-2xl shadow-lg mt-16">
-
+  
 <div id="userGreeting" class="mb-2 text-sm text-gray-300"></div>
 
 <h1 class="text-2xl font-bold mb-4">💰 Controle de Gastos</h1>
 
 <div id="app" style="display:none;">
 
-<input id="desc" placeholder="Descrição" class="w-full p-2 mb-2 bg-gray-700 rounded">
+<div class="mb-4">
+<input id="desc" placeholder="Descrição"
+class="w-full p-2 mb-2 bg-gray-700 rounded">
 
 <select id="category" class="w-full p-2 mb-2 bg-gray-700 rounded">
-<option>Conta</option>
-<option>Divida</option>
-<option>Outros</option>
-<option>Vendas</option>
-<option>Água</option>
-<option>Luz</option>
-<option>Compra</option>
-<option>Saldo</option>
+  <option>Conta</option>
+  <option>Divida</option>
+  <option>Outros</option>
+  <option>Vendas</option>
+  <option>Água</option>
+  <option>Luz</option>
+  <option>Compra</option>
+  <option>Saldo</option>
 </select>
 
-<input id="value" type="number" placeholder="Valor" class="w-full p-2 mb-2 bg-gray-700 rounded">
+<input id="value" type="number" placeholder="Valor"
+class="w-full p-2 mb-2 bg-gray-700 rounded">
 
-<button onclick="addTransaction()" class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
+<button onclick="addTransaction()"
+class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
+</div>
 
-<div class="mt-4">
-Entradas: <span id="income">0</span><br>
-Gastos: <span id="expenses">0</span><br>
-Saldo: <span id="balance">0</span><br>
-Dívida: <span id="debtRemaining">0</span>
+<div class="grid grid-cols-2 gap-3 mb-2 text-sm">
+  <div class="bg-gray-700 p-3 rounded-xl">
+    Entradas: R$ <span id="income">0</span>
+  </div>
+
+  <div class="bg-gray-700 p-3 rounded-xl">
+    Gastos: R$ <span id="expenses">0</span>
+  </div>
+
+  <div class="bg-gray-700 p-3 rounded-xl">
+    Salário: R$ <span id="salaryView">0</span>
+  </div>
+
+  <div class="bg-red-600/30 text-red-300 p-3 rounded-xl font-bold">
+    Dívida restante: R$ <span id="debtRemaining">0</span>
+  </div>
+</div>
+
+<div class="mt-10 mb-6 p-5 bg-gray-800 border border-gray-600 rounded-2xl text-center text-2xl font-bold">
+  Saldo: R$ <span id="balance">0</span>
 </div>
 
 <ul id="list"></ul>
@@ -94,7 +117,7 @@ let history = {};
 // LOGIN
 function login(){
 auth.signInWithPopup(provider)
-.catch(e => alert(e.message));
+.catch(e => alert("Erro login: " + e.message));
 }
 
 // LOGOUT
@@ -118,16 +141,17 @@ overlay.classList.remove("hidden");
 }
 }
 
-// AUTH
+// AUTH STATE
 auth.onAuthStateChanged(user=>{
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 
 if(user){
 userId = user.uid;
-
 document.getElementById("app").style.display = "block";
-document.getElementById("userGreeting").innerText = "Olá, " + user.displayName;
+
+document.getElementById("userGreeting").innerText =
+"Olá, " + (user.displayName || user.email);
 
 loginBtn.style.display = "none";
 logoutBtn.style.display = "block";
@@ -182,16 +206,17 @@ const category = document.getElementById("category").value;
 if(!desc || isNaN(value)) return;
 
 transactions.push({desc,value,category});
+
+document.getElementById("desc").value = "";
+document.getElementById("value").value = "";
+
 updateUI();
 }
 
 // UI
 function updateUI(){
 
-let income = 0;
-let expenses = 0;
-let total = 0;
-let debt = 0;
+let income=0, expenses=0, total=0, debt=0;
 
 const list = document.getElementById("list");
 list.innerHTML = "";
@@ -200,25 +225,26 @@ transactions.forEach(t=>{
 
 let v = t.value;
 
-if(t.category === "Divida"){
+if(t.category==="Divida"){
 v = -Math.abs(v);
 debt += Math.abs(v);
 }
 
-if(v > 0) income += v;
+if(v>0) income += v;
 else expenses += v;
 
 total += v;
 
 const li = document.createElement("li");
-li.innerHTML = `${t.desc} - ${v}`;
+li.className="flex justify-between bg-gray-700 p-2 mt-1 rounded";
+li.innerHTML = `${t.desc} - R$ ${v.toFixed(2)}`;
 list.appendChild(li);
 });
 
-document.getElementById("income").innerText = income;
-document.getElementById("expenses").innerText = Math.abs(expenses);
-document.getElementById("balance").innerText = total;
-document.getElementById("debtRemaining").innerText = debt;
+document.getElementById("income").innerText = income.toFixed(2);
+document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
+document.getElementById("balance").innerText = total.toFixed(2);
+document.getElementById("debtRemaining").innerText = debt.toFixed(2);
 
 saveData();
 
@@ -230,12 +256,12 @@ for(const month in history){
 
 const totalMes = history[month].reduce((acc,t)=>{
 let v = t.value;
-if(t.category === "Divida") v = -Math.abs(v);
+if(t.category==="Divida") v = -Math.abs(v);
 return acc + v;
 },0);
 
 const el = document.createElement("div");
-el.className = "bg-gray-700 p-1 mb-1 rounded";
+el.className="bg-gray-700 p-1 mb-1 rounded";
 el.innerText = `${month}: R$ ${totalMes.toFixed(2)}`;
 
 historyDiv.appendChild(el);
