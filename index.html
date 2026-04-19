@@ -87,7 +87,7 @@ class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
 </div>
 
 <script>
-// 🔥 FIREBASE (APENAS UMA VEZ)
+// 🔥 FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
   authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
@@ -99,12 +99,14 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
+// ✅ PRIMEIRO cria auth e db
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// ✅ DEPOIS configura persistência
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
   .catch(console.error);
-  
+
 let userId = null;
 let transactions = [];
 let salary = 0;
