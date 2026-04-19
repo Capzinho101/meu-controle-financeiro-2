@@ -222,10 +222,25 @@ v = -Math.abs(v);
 if(t.status === "pendente") debt += Math.abs(t.value);
 }
 
-if(v > 0) income += v;
-else expenses += v;
+// entradas / gastos
+if (t.category === "Divida") {
 
-total += v;
+  if (t.status === "pago") {
+    // só conta como gasto quando pago
+    expenses += Math.abs(v);
+    total -= Math.abs(v);
+  } else {
+    // pendente não entra em gasto nem saldo
+    debt += Math.abs(t.value);
+  }
+
+} else {
+
+  if (v > 0) income += v;
+  else expenses += Math.abs(v);
+
+  total += v;
+}
 
 let tagColor = "bg-gray-600";
 if(t.category==="Divida") tagColor="bg-red-600";
