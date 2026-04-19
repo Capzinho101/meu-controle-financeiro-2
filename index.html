@@ -99,14 +99,20 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 
-// ✅ PRIMEIRO cria auth e db
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// ✅ DEPOIS configura persistência
+let userId = null;
+let transactions = [];
+let salary = 0;
+let history = {};
+
+const provider = new firebase.auth.GoogleAuthProvider();
+
+// persistência (segura)
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
   .catch(console.error);
-
+  
 let userId = null;
 let transactions = [];
 let salary = 0;
