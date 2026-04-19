@@ -295,33 +295,36 @@ ${t.status === "pendente" ? "PENDENTE" : "PAGO"}
 }
 
 
-document.getElementById("income").innerText = income.toFixed(2);
-document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
-document.getElementById("balance").innerText = total.toFixed(2);
-document.getElementById("salaryView").innerText = salary;
-document.getElementById("debtRemaining").innerText = debtRemaining.toFixed(2);
+  document.getElementById("income").innerText = income.toFixed(2);
+  document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
+  document.getElementById("balance").innerText = total.toFixed(2);
+  document.getElementById("salaryView").innerText = salary;
+  document.getElementById("debtRemaining").innerText = debtRemaining.toFixed(2);
 
-saveData();
+  saveData();
 
-// HISTORICO MENSAL
-const historyDiv = document.getElementById("historyList");
-historyDiv.innerHTML = "";
+  // ===== HISTÓRICO MENSAL =====
+  const historyDiv = document.getElementById("historyList");
+  if (historyDiv) {
+    historyDiv.innerHTML = "";
 
-for(const month in history){
-  const totalMes = history[month].reduce((acc, t)=>{
-    if(t.category === "Divida" && t.status === "pendente") return acc;
-    
-    let v = t.value;
-    if(t.category === "Divida") v = -Math.abs(v);
+    for (const month in history) {
+      const totalMes = history[month].reduce((acc, t) => {
+        if (t.category === "Divida" && t.status === "pendente") return acc;
 
-    return acc + v;
-  },0);
+        let v = t.value;
+        if (t.category === "Divida") v = -Math.abs(v);
 
-  const el = document.createElement("div");
-  el.className = "bg-gray-700 p-2 mt-1 rounded";
-  el.innerText = `${month} → Saldo: R$ ${totalMes.toFixed(2)}`;
+        return acc + v;
+      }, 0);
 
-  historyDiv.appendChild(el);
+      const el = document.createElement("div");
+      el.className = "bg-gray-700 p-2 mt-1 rounded";
+      el.innerText = `${month} → Saldo: R$ ${totalMes.toFixed(2)}`;
+
+      historyDiv.appendChild(el);
+    }
+  }
 }
 </script>
 
