@@ -5,7 +5,6 @@
 <title>Controle de Gastos</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
-
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -13,24 +12,26 @@
 
 <body class="bg-gray-900 text-white">
 
-<!-- MENU -->
-<div id="overlay" onclick="toggleMenu()"
-class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
+<div id="overlay" onclick="toggleMenu()" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
 
-<div id="sidebar"
-class="fixed left-[-260px] top-0 w-64 h-full bg-gray-800 p-4 transition-all duration-300 z-50">
+<!-- MENU -->
+<div id="sidebar" class="fixed left-[-260px] top-0 w-64 h-full bg-gray-800 p-4 transition-all duration-300 z-50">
 
 <h2 class="text-xl mb-4">Menu</h2>
 
 <button id="loginBtn" onclick="login()" class="bg-green-600 w-full p-2 mb-2 rounded">Login</button>
 <button id="logoutBtn" onclick="logout()" class="bg-gray-600 w-full p-2 mb-2 rounded">Sair</button>
 
+<hr class="my-3 border-gray-600">
+
+<h3 class="text-sm mb-2">Histórico Mensal</h3>
+<div id="historyList" class="text-sm"></div>
+
 </div>
 
-<button onclick="toggleMenu()"
-class="fixed top-4 left-4 bg-blue-600 px-3 py-2 rounded z-50">☰</button>
+<button onclick="toggleMenu()" class="fixed top-4 left-4 bg-blue-600 px-3 py-2 rounded z-50">☰</button>
 
-<!-- APP -->
+<!-- CONTEÚDO -->
 <div class="max-w-2xl mx-auto bg-gray-800 p-6 rounded-2xl shadow-lg mt-16">
 
 <div id="userGreeting" class="mb-2 text-sm text-gray-300"></div>
@@ -39,60 +40,41 @@ class="fixed top-4 left-4 bg-blue-600 px-3 py-2 rounded z-50">☰</button>
 
 <div id="app" style="display:none;">
 
-<!-- INPUT -->
-<div class="mb-4">
-<input id="desc" placeholder="Descrição"
-class="w-full p-2 mb-2 bg-gray-700 rounded">
+<input id="desc" placeholder="Descrição" class="w-full p-2 mb-2 bg-gray-700 rounded">
 
 <select id="category" class="w-full p-2 mb-2 bg-gray-700 rounded">
-  <option>Conta</option>
-  <option>Divida</option>
-  <option>Outros</option>
-  <option>Vendas</option>
-  <option>Água</option>
-  <option>Luz</option>
-  <option>Compra</option>
-  <option>Saldo</option>
+<option>Conta</option>
+<option>Divida</option>
+<option>Outros</option>
+<option>Vendas</option>
+<option>Água</option>
+<option>Luz</option>
+<option>Compra</option>
+<option>Saldo</option>
 </select>
 
-<input id="value" type="number" placeholder="Valor"
-class="w-full p-2 mb-2 bg-gray-700 rounded">
+<input id="value" type="number" placeholder="Valor" class="w-full p-2 mb-2 bg-gray-700 rounded">
 
-<button onclick="addTransaction()"
-class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
-</div>
+<button onclick="addTransaction()" class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
 
-<!-- RESUMO -->
-<div class="grid grid-cols-2 gap-3 mb-2 text-sm">
-  <div class="bg-gray-700 p-3 rounded-xl">Entradas: R$ <span id="income">0</span></div>
-  <div class="bg-gray-700 p-3 rounded-xl">Gastos: R$ <span id="expenses">0</span></div>
-  <div class="bg-gray-700 p-3 rounded-xl">Salário: R$ <span id="salaryView">0</span></div>
-  <div class="bg-red-600/30 text-red-300 p-3 rounded-xl font-bold">
-    Dívida: R$ <span id="debtRemaining">0</span>
-  </div>
-</div>
-
-<div class="mt-6 mb-6 p-5 bg-gray-800 border border-gray-600 rounded-2xl text-center text-2xl font-bold">
-  Saldo: R$ <span id="balance">0</span>
+<div class="mt-4">
+Entradas: <span id="income">0</span><br>
+Gastos: <span id="expenses">0</span><br>
+Saldo: <span id="balance">0</span><br>
+Dívida: <span id="debtRemaining">0</span>
 </div>
 
 <ul id="list"></ul>
-
-<!-- HISTÓRICO -->
-<div id="historyList" class="mt-6"></div>
 
 </div>
 </div>
 
 <script>
-// 🔥 FIREBASE
+// FIREBASE
 const firebaseConfig = {
-  apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
-  authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
-  projectId: "meu-controle-financeiro-a0572",
-  storageBucket: "meu-controle-financeiro-a0572.firebasestorage.app",
-  messagingSenderId: "202199536593",
-  appId: "1:202199536593:web:be012b0bd8c44b8c86c6f0"
+apiKey: "AIzaSyDeXJ_uSeaLgPKRUA1nCV7UFwEzpmiOmHc",
+authDomain: "meu-controle-financeiro-a0572.firebaseapp.com",
+projectId: "meu-controle-financeiro-a0572",
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -100,202 +82,143 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+const provider = new firebase.auth.GoogleAuthProvider();
 
 let userId = null;
 let transactions = [];
 let salary = 0;
 let history = {};
 
-const provider = new firebase.auth.GoogleAuthProvider();
-
 // LOGIN
 function login(){
-  auth.signInWithRedirect(provider).catch(console.error);
+auth.signInWithPopup(provider)
+.catch(e => alert(e.message));
 }
 
 // LOGOUT
 function logout(){
-  auth.signOut();
+auth.signOut();
 }
-
-// ESTADO LOGIN
-auth.onAuthStateChanged(user=>{
-  const loginBtn = document.getElementById("loginBtn");
-  const logoutBtn = document.getElementById("logoutBtn");
-
-  if(user){
-    userId = user.uid;
-
-    document.getElementById("app").style.display = "block";
-    document.getElementById("userGreeting").innerText =
-      `Olá, ${user.displayName || user.email}`;
-
-    loginBtn.style.display = "none";
-    logoutBtn.style.display = "block";
-
-    loadData();
-  } else {
-    userId = null;
-
-    document.getElementById("app").style.display = "none";
-    document.getElementById("userGreeting").innerText = "";
-
-    loginBtn.style.display = "block";
-    logoutBtn.style.display = "none";
-  }
-});
 
 // MENU
 function toggleMenu(){
-  const menu = document.getElementById("sidebar");
-  const overlay = document.getElementById("overlay");
+const menu = document.getElementById("sidebar");
+const overlay = document.getElementById("overlay");
 
-  const open = menu.style.left === "0px";
+const open = menu.style.left === "0px";
 
-  if(open){
-    menu.style.left = "-260px";
-    overlay.classList.add("hidden");
-  } else {
-    menu.style.left = "0px";
-    overlay.classList.remove("hidden");
-  }
+if(open){
+menu.style.left = "-260px";
+overlay.classList.add("hidden");
+} else {
+menu.style.left = "0px";
+overlay.classList.remove("hidden");
 }
+}
+
+// AUTH
+auth.onAuthStateChanged(user=>{
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+
+if(user){
+userId = user.uid;
+
+document.getElementById("app").style.display = "block";
+document.getElementById("userGreeting").innerText = "Olá, " + user.displayName;
+
+loginBtn.style.display = "none";
+logoutBtn.style.display = "block";
+
+loadData();
+
+} else {
+userId = null;
+document.getElementById("app").style.display = "none";
+document.getElementById("userGreeting").innerText = "";
+
+loginBtn.style.display = "block";
+logoutBtn.style.display = "none";
+}
+});
 
 // LOAD
 async function loadData(){
-  const doc = await db.collection("users").doc(userId).get();
-  if(doc.exists){
-    const d = doc.data();
-    transactions = d.transactions || [];
-    salary = d.salary || 0;
-    history = d.history || {};
-  }
-  updateUI();
+const doc = await db.collection("users").doc(userId).get();
+
+if(doc.exists){
+const d = doc.data();
+transactions = d.transactions || [];
+salary = d.salary || 0;
+history = d.history || {};
+}
+
+updateUI();
 }
 
 // SAVE
 async function saveData(){
-  const now = new Date();
-  const monthKey = `${now.getFullYear()}-${now.getMonth()+1}`;
 
-  history[monthKey] = [...transactions];
+const now = new Date();
+const monthKey = `${now.getFullYear()}-${now.getMonth()+1}`;
 
-  await db.collection("users").doc(userId).set({
-    transactions,
-    salary,
-    history
-  });
+history[monthKey] = [...transactions];
+
+await db.collection("users").doc(userId).set({
+transactions,
+salary,
+history
+});
 }
 
 // ADD
 function addTransaction(){
-  const desc = document.getElementById("desc").value;
-  let value = parseFloat(document.getElementById("value").value);
-  const category = document.getElementById("category").value;
+const desc = document.getElementById("desc").value;
+let value = parseFloat(document.getElementById("value").value);
+const category = document.getElementById("category").value;
 
-  if(!desc || isNaN(value)) return alert("Preencha tudo");
+if(!desc || isNaN(value)) return;
 
-  if(category === "Saldo"){
-    value = Math.abs(value);
-  }
-
-  transactions.push({
-    desc,
-    value,
-    category,
-    status: category === "Divida" ? "pendente" : null
-  });
-
-  document.getElementById("desc").value = "";
-  document.getElementById("value").value = "";
-
-  updateUI();
-}
-
-// STATUS
-function toggleStatus(i){
-  transactions[i].status =
-    transactions[i].status === "pendente" ? "pago" : "pendente";
-  updateUI();
-}
-
-// DELETE
-function removeTransaction(i){
-  transactions.splice(i,1);
-  updateUI();
+transactions.push({desc,value,category});
+updateUI();
 }
 
 // UI
 function updateUI(){
 
+let income = 0;
+let expenses = 0;
+let total = 0;
+let debt = 0;
+
 const list = document.getElementById("list");
 list.innerHTML = "";
 
-let total = 0;
-let income = 0;
-let expenses = 0;
-let debtRemaining = 0;
+transactions.forEach(t=>{
 
-transactions.forEach((t,i)=>{
-
-let value = t.value;
-
-if(t.category === "Divida" && !t.status){
-t.status = "pendente";
-}
-
-let include = true;
+let v = t.value;
 
 if(t.category === "Divida"){
-value = -Math.abs(value);
-
-if(t.status === "pendente"){
-debtRemaining += Math.abs(t.value);
-include = false;
-}
+v = -Math.abs(v);
+debt += Math.abs(v);
 }
 
-if(t.category !== "Divida" || t.status === "pago"){
-  total += value;
-}
+if(v > 0) income += v;
+else expenses += v;
 
-if(include){
-  if(value > 0) income += value;
-  else expenses += value;
-}
-
-let statusBtn = "";
-if(t.category === "Divida"){
-statusBtn = `
-<button onclick="toggleStatus(${i})"
-class="ml-2 px-2 py-1 text-xs rounded
-${t.status === "pendente" ? "bg-red-500" : "bg-green-500"}">
-${t.status === "pendente" ? "PENDENTE" : "PAGO"}
-</button>
-`;
-}
+total += v;
 
 const li = document.createElement("li");
-li.className="flex justify-between bg-gray-700 p-2 mt-1 rounded";
-
-li.innerHTML = `
-<div>${t.desc} (${t.category}) ${statusBtn}</div>
-<div class="flex gap-2">
-R$ ${value.toFixed(2)}
-<button onclick="removeTransaction(${i})" class="text-red-400">X</button>
-</div>
-`;
-
+li.innerHTML = `${t.desc} - ${v}`;
 list.appendChild(li);
 });
 
-// totals
-document.getElementById("income").innerText = income.toFixed(2);
-document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
-document.getElementById("balance").innerText = total.toFixed(2);
-document.getElementById("salaryView").innerText = salary;
-document.getElementById("debtRemaining").innerText = debtRemaining.toFixed(2);
+document.getElementById("income").innerText = income;
+document.getElementById("expenses").innerText = Math.abs(expenses);
+document.getElementById("balance").innerText = total;
+document.getElementById("debtRemaining").innerText = debt;
 
 saveData();
 
@@ -304,17 +227,18 @@ const historyDiv = document.getElementById("historyList");
 historyDiv.innerHTML = "";
 
 for(const month in history){
-  const totalMes = history[month].reduce((acc,t)=>{
-    if(t.category==="Divida" && t.status==="pendente") return acc;
-    let v = t.value;
-    if(t.category==="Divida") v = -Math.abs(v);
-    return acc + v;
-  },0);
 
-  const el = document.createElement("div");
-  el.className="bg-gray-700 p-2 mt-1 rounded";
-  el.innerText = `${month} → R$ ${totalMes.toFixed(2)}`;
-  historyDiv.appendChild(el);
+const totalMes = history[month].reduce((acc,t)=>{
+let v = t.value;
+if(t.category === "Divida") v = -Math.abs(v);
+return acc + v;
+},0);
+
+const el = document.createElement("div");
+el.className = "bg-gray-700 p-1 mb-1 rounded";
+el.innerText = `${month}: R$ ${totalMes.toFixed(2)}`;
+
+historyDiv.appendChild(el);
 }
 }
 </script>
