@@ -216,13 +216,14 @@ includeExpense = false;
 }
 }
 
-total += value;
-
-if(includeExpense){
-if(value > 0) income += value;
-else expenses += value;
+if(t.category !== "Divida" || t.status === "pago"){
+  total += value;
 }
 
+if(includeExpense){
+  if(value > 0) income += value;
+  else expenses += value;
+}
 let statusBtn = "";
 if(t.category === "Divida"){
 statusBtn = `
