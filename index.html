@@ -97,8 +97,7 @@ let history = {};
 
 // LOGIN
 function login(){
-auth.signInWithPopup(provider)
-.catch(e => alert(e.message));
+auth.signInWithPopup(provider).catch(e=>alert(e.message));
 }
 
 // LOGOUT
@@ -130,7 +129,8 @@ const logoutBtn = document.getElementById("logoutBtn");
 if(user){
 userId = user.uid;
 document.getElementById("app").style.display = "block";
-document.getElementById("userGreeting").innerText = "Olá, " + (user.displayName || user.email);
+document.getElementById("userGreeting").innerText =
+"Olá, " + (user.displayName || user.email);
 
 loginBtn.style.display = "none";
 logoutBtn.style.display = "block";
@@ -150,11 +150,13 @@ logoutBtn.style.display = "none";
 // LOAD
 async function loadData(){
 const doc = await db.collection("users").doc(userId).get();
+
 if(doc.exists){
 const d = doc.data();
 transactions = d.transactions || [];
 history = d.history || {};
 }
+
 updateUI();
 }
 
@@ -179,12 +181,7 @@ const category = document.getElementById("category").value;
 
 if(!desc || isNaN(value)) return;
 
-transactions.push({
-desc,
-value,
-category,
-status: category === "Divida" ? "pendente" : null
-});
+transactions.push({desc,value,category,status:"pendente"});
 
 document.getElementById("desc").value = "";
 document.getElementById("value").value = "";
@@ -216,39 +213,40 @@ list.innerHTML = "";
 transactions.forEach((t,i)=>{
 
 let v = t.value;
-let isDivida = t.category === "Divida";
 
-// entradas / gastos
-if (t.category === "Divida") {
+// dívida NÃO entra no saldo até ser paga
+if(t.category === "Divida"){
 
-  if (t.status === "pago") {
-    // só conta como gasto quando pago
-    expenses += Math.abs(v);
-    total -= Math.abs(v);
-  } else {
-    // pendente não entra em gasto nem saldo
-    debt += Math.abs(t.value);
-  }
+debt += Math.abs(v);
 
-} else {
-
-  if (v > 0) income += v;
-  else expenses += Math.abs(v);
-
-  total += v;
+if(t.status === "pago"){
+expenses += Math.abs(v);
+total -= Math.abs(v);
 }
 
+}else{
+
+if(v > 0) income += v;
+else expenses += Math.abs(v);
+
+total += v;
+}
+
+// TAG
 let tagColor = "bg-gray-600";
 if(t.category==="Divida") tagColor="bg-red-600";
-if(t.category==="Conta") tagColor="bg-blue-600";
-if(t.category==="Vendas") tagColor="bg-green-600";
+else if(t.category==="Conta") tagColor="bg-blue-600";
+else if(t.category==="Vendas") tagColor="bg-green-600";
 
-const statusBtn = t.category==="Divida" ? `
+// status
+let statusBtn = t.category==="Divida" ? `
 <button onclick="toggleStatus(${i})"
-class="ml-2 px-2 py-1 text-xs rounded ${t.status==="pendente"?"bg-red-500":"bg-green-500"}">
+class="ml-2 px-2 py-1 text-xs rounded
+${t.status==="pendente"?"bg-red-500":"bg-green-500"}">
 ${t.status}
 </button>` : "";
 
+// item
 const li = document.createElement("li");
 li.className="flex justify-between bg-gray-700 p-2 mt-1 rounded";
 
@@ -268,21 +266,23 @@ R$ ${v.toFixed(2)}
 list.appendChild(li);
 });
 
+// totals
 document.getElementById("income").innerText = income.toFixed(2);
-document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
+document.getElementById("expenses").innerText = expenses.toFixed(2);
 document.getElementById("balance").innerText = total.toFixed(2);
 document.getElementById("debtRemaining").innerText = debt.toFixed(2);
 
 saveData();
 
-// HISTÓRICO
+// HISTORY
 const historyDiv = document.getElementById("historyList");
 historyDiv.innerHTML = "";
 
 for(const m in history){
+
 const totalMes = history[m].reduce((a,t)=>{
 let v = t.value;
-if(t.category==="Divida") v = -Math.abs(v);
+if(t.category==="Divida" && t.status==="pago") v = -Math.abs(v);
 return a+v;
 },0);
 
