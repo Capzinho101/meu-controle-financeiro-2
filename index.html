@@ -47,6 +47,7 @@ class="w-full p-2 mb-2 bg-gray-700 rounded">
   <option>Água</option>
   <option>Luz</option>
   <option>Compra</option>
+  <option>Saldo</option>
 </select>
 
 <input id="value" type="number" placeholder="Valor"
@@ -155,30 +156,36 @@ transactions,
 salary
 });
 }
-
+// TOGGLESTATUS
 function toggleStatus(i){
   transactions[i].status =
     transactions[i].status === "pendente" ? "pago" : "pendente";
   updateUI();
 }
-
+// REMOVE TRANSACTION
 function removeTransaction(i){
   transactions.splice(i,1);
   updateUI();
 }
-
+// ADD TRANSCTION
 function addTransaction(){
 const desc = document.getElementById("desc").value;
-const value = parseFloat(document.getElementById("value").value);
+let value = parseFloat(document.getElementById("value").value);
 const category = document.getElementById("category").value;
 
 if(!desc || isNaN(value)) return alert("Preencha tudo");
 
+// 💰 SALDO sempre positivo
+if(category === "Saldo"){
+  value = Math.abs(value);
+}
+
+// 🔴 DÍVIDA continua normal (status pendente)
 transactions.push({
-desc,
-value,
-category,
-status: category === "Divida" ? "pendente" : null
+  desc,
+  value,
+  category,
+  status: category === "Divida" ? "pendente" : null
 });
 
 document.getElementById("desc").value = "";
