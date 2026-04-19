@@ -95,10 +95,11 @@ projectId: "meu-controle-financeiro-a0572",
 };
 
 firebase.initializeApp(firebaseConfig);
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-  
+
 const auth = firebase.auth();
 const db = firebase.firestore();
+
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL); 
 
 let userId = null;
 let transactions = [];
@@ -109,15 +110,19 @@ const provider = new firebase.auth.GoogleAuthProvider();
 
 // LOGIN
 function login(){
-  alert("clicou no login");
-
   auth.signInWithPopup(provider)
     .then(result => {
-      console.log("Logado:", result.user.displayName);
+      const user = result.user;
+
+      // mostra nome imediatamente
+      const nome = user.displayName || user.email || "Usuário";
+      document.getElementById("userGreeting").innerText = `Olá, ${nome}`;
+
+      console.log("Logado:", nome);
     })
     .catch(error => {
       console.error(error);
-      alert("Erro: " + error.message);
+      alert("Erro no login: " + error.message);
     });
 }
 
