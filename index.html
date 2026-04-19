@@ -221,34 +221,80 @@ let income=0, expenses=0, total=0, debt=0;
 const list = document.getElementById("list");
 list.innerHTML = "";
 
-transactions.forEach(t=>{
+transactions.forEach((t,i)=>{
 
 let v = t.value;
 
-if(t.category==="Divida"){
+// dívida
+if(t.category === "Divida"){
 v = -Math.abs(v);
-debt += Math.abs(v);
+if(t.status === "pendente") debt += Math.abs(t.value);
 }
 
-if(v>0) income += v;
+// entradas / gastos
+if(v > 0) income += v;
 else expenses += v;
 
 total += v;
 
+// ===== TAGS =====
+let tagColor = "bg-gray-600";
+if(t.category === "Divida") tagColor = "bg-red-600";
+else if(t.category === "Conta") tagColor = "bg-blue-600";
+else if(t.category === "Vendas") tagColor = "bg-green-600";
+else if(t.category === "Luz") tagColor = "bg-yellow-600";
+
+// botão dívida
+let statusBtn = "";
+if(t.category === "Divida"){
+statusBtn = `
+<button onclick="toggleStatus(${i})"
+class="ml-2 px-2 py-1 text-xs rounded
+${t.status === "pendente" ? "bg-red-500" : "bg-green-500"}">
+${t.status === "pendente" ? "PENDENTE" : "PAGO"}
+</button>
+`;
+}
+
+// item
 const li = document.createElement("li");
 li.className="flex justify-between bg-gray-700 p-2 mt-1 rounded";
-li.innerHTML = `${t.desc} - R$ ${v.toFixed(2)}`;
+
+li.innerHTML = `
+<div class="flex items-center gap-2">
+
+<span class="px-2 py-1 text-xs rounded ${tagColor}">
+${t.category}
+</span>
+
+${t.desc}
+${statusBtn}
+
+</div>
+
+<div class="flex gap-2 items-center">
+R$ ${v.toFixed(2)}
+
+<button onclick="removeTransaction(${i})"
+class="text-red-400 font-bold">
+X
+</button>
+</div>
+`;
+
 list.appendChild(li);
 });
 
+// totais
 document.getElementById("income").innerText = income.toFixed(2);
 document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
 document.getElementById("balance").innerText = total.toFixed(2);
 document.getElementById("debtRemaining").innerText = debt.toFixed(2);
 
+// salva
 saveData();
 
-// HISTÓRICO
+// histórico (mantido)
 const historyDiv = document.getElementById("historyList");
 historyDiv.innerHTML = "";
 
