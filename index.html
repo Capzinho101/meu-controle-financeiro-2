@@ -109,13 +109,15 @@ const provider = new firebase.auth.GoogleAuthProvider();
 
 // LOGIN
 function login(){
+  alert("clicou no login");
+
   auth.signInWithPopup(provider)
     .then(result => {
       console.log("Logado:", result.user.displayName);
     })
     .catch(error => {
       console.error(error);
-      alert("Erro no login");
+      alert("Erro: " + error.message);
     });
 }
 
