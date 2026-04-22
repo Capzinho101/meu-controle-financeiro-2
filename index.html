@@ -181,14 +181,24 @@ const category = document.getElementById("category").value;
 
 if(!desc || isNaN(value)) return;
 
-transactions.push({desc,value,category,status:"pendente"});
+// NEGATIVO AUTOMATICO 
+if(category === "Compra" || category === "Conta" || category === "Luz"){
+  value = -Math.abs(value);
+}
+
+transactions.push({
+  desc,
+  value,
+  category,
+  status: category === "Divida" ? "pendente" : null
+});
 
 document.getElementById("desc").value = "";
 document.getElementById("value").value = "";
 
 updateUI();
 }
-
+  
 // TOGGLE STATUS
 function toggleStatus(i){
 transactions[i].status =
@@ -205,32 +215,39 @@ updateUI();
 // UI
 function updateUI(){
 
-let income=0, expenses=0, total=0, debt=0;
+let income = 0, expenses = 0, total = 0, debt = 0;
 
-const list = document.getElementById("list");
-list.innerHTML = "";
-
-transactions.forEach((t,i)=>{
+transactions.forEach((t)=>{
 
 let v = t.value;
 
-// dívida NÃO entra no saldo até ser paga
-if(t.category === "Divida"){
+// ===== DÍVIDA =====
+if (t.category === "Divida") {
 
-debt += Math.abs(v);
+  if (t.status === "pendente") {
+    // só entra como dívida restante
+    debt += Math.abs(v);
+    return;
+  }
 
-if(t.status === "pago"){
-expenses += Math.abs(v);
-total -= Math.abs(v);
+  if (t.status === "pago") {
+    // vira gasto real
+    expenses += Math.abs(v);
+    total -= Math.abs(v);
+    return;
+  }
 }
 
-}else{
-
-if(v > 0) income += v;
-else expenses += Math.abs(v);
-
-total += v;
+// ===== NORMAL =====
+if (v > 0) {
+  income += v;
+  total += v;
+} else {
+  expenses += Math.abs(v);
+  total -= Math.abs(v);
 }
+
+});
 
 // TAG
 let tagColor = "bg-gray-600";
