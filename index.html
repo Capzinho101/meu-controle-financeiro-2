@@ -217,7 +217,10 @@ function updateUI(){
 
 let income = 0, expenses = 0, total = 0, debt = 0;
 
-transactions.forEach((t)=>{
+const list = document.getElementById("list");
+list.innerHTML = "";
+
+transactions.forEach((t,i)=>{
 
 let v = t.value;
 
@@ -225,37 +228,33 @@ let v = t.value;
 if (t.category === "Divida") {
 
   if (t.status === "pendente") {
-    // só entra como dívida restante
     debt += Math.abs(v);
-    return;
   }
 
   if (t.status === "pago") {
-    // vira gasto real
     expenses += Math.abs(v);
     total -= Math.abs(v);
-    return;
   }
-}
 
-// ===== NORMAL =====
-if (v > 0) {
-  income += v;
-  total += v;
 } else {
-  expenses += Math.abs(v);
-  total -= Math.abs(v);
+
+  if (v > 0) {
+    income += v;
+    total += v;
+  } else {
+    expenses += Math.abs(v);
+    total -= Math.abs(v);
+  }
+
 }
 
-});
-
-// TAG
+// ===== TAG =====
 let tagColor = "bg-gray-600";
 if(t.category==="Divida") tagColor="bg-red-600";
 else if(t.category==="Conta") tagColor="bg-blue-600";
 else if(t.category==="Vendas") tagColor="bg-green-600";
 
-// status
+// ===== STATUS =====
 let statusBtn = t.category==="Divida" ? `
 <button onclick="toggleStatus(${i})"
 class="ml-2 px-2 py-1 text-xs rounded
@@ -263,7 +262,7 @@ ${t.status==="pendente"?"bg-red-500":"bg-green-500"}">
 ${t.status}
 </button>` : "";
 
-// item
+// ===== ITEM =====
 const li = document.createElement("li");
 li.className="flex justify-between bg-gray-700 p-2 mt-1 rounded";
 
@@ -281,9 +280,10 @@ R$ ${v.toFixed(2)}
 `;
 
 list.appendChild(li);
+
 });
 
-// totals
+// ===== TOTAIS =====
 document.getElementById("income").innerText = income.toFixed(2);
 document.getElementById("expenses").innerText = expenses.toFixed(2);
 document.getElementById("balance").innerText = total.toFixed(2);
@@ -291,7 +291,7 @@ document.getElementById("debtRemaining").innerText = debt.toFixed(2);
 
 saveData();
 
-// HISTORY
+// ===== HISTÓRICO =====
 const historyDiv = document.getElementById("historyList");
 historyDiv.innerHTML = "";
 
