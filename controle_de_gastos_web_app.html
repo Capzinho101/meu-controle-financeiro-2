@@ -1,8 +1,10 @@
+```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <title>Controle de Gastos</title>
+
 <script src="https://cdn.tailwindcss.com"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -11,6 +13,10 @@
 </head>
 
 <body class="bg-gray-900 text-white p-6">
+
+<!-- ============================================================
+     MENU / SIDEBAR
+============================================================ -->
 
 <button onclick="toggleSidebar()"
 class="fixed top-3 left-3 bg-gray-800 px-3 py-2 rounded z-50">
@@ -26,63 +32,181 @@ class="fixed top-0 left-0 w-72 h-full bg-gray-950 p-4 transform -translate-x-ful
 
   <h2 class="font-bold mb-4">⚙ Painel</h2>
 
+  <!-- ============================================================
+       CONTA / LOGIN
+  ============================================================ -->
+
   <div class="bg-gray-900 p-3 rounded mb-4">
+
     <p class="text-sm mb-2">👤 Conta</p>
-    <button onclick="login()" class="bg-green-600 w-full p-2 rounded mb-2">Login Google</button>
-    <button onclick="logout()" class="bg-red-600 w-full p-2 rounded">Sair</button>
+
+    <button
+      id="loginBtn"
+      onclick="login()"
+      class="bg-green-600 w-full p-2 rounded mb-2">
+      Login Google
+    </button>
+
+    <button
+      id="logoutBtn"
+      onclick="logout()"
+      class="bg-red-600 w-full p-2 rounded"
+      style="display:none;">
+      Sair
+    </button>
+
     <p id="userSidebar" class="text-xs mt-2"></p>
+
   </div>
 
+  <!-- ============================================================
+       SALÁRIO
+  ============================================================ -->
+
   <div class="mb-4">
+
     <p class="text-sm">💰 Salário</p>
-    <input id="salary" type="number" class="bg-gray-800 p-2 w-full rounded">
-    <button onclick="setSalary()" class="bg-blue-600 w-full p-2 rounded mt-2">Salvar</button>
+
+    <input
+      id="salary"
+      type="number"
+      class="bg-gray-800 p-2 w-full rounded">
+
+    <button
+      onclick="setSalary()"
+      class="bg-blue-600 w-full p-2 rounded mt-2">
+      Salvar
+    </button>
+
   </div>
 
+  <!-- ============================================================
+       CICLO
+  ============================================================ -->
+
   <div class="mb-4">
+
     <p class="text-sm">📅 Dia do ciclo</p>
-    <input id="cycle" type="number" min="1" max="31" class="bg-gray-800 p-2 w-full rounded">
-    <button onclick="setCycle()" class="bg-purple-600 w-full p-2 rounded mt-2">Salvar</button>
+
+    <input
+      id="cycle"
+      type="number"
+      min="1"
+      max="31"
+      class="bg-gray-800 p-2 w-full rounded">
+
+    <button
+      onclick="setCycle()"
+      class="bg-purple-600 w-full p-2 rounded mt-2">
+      Salvar
+    </button>
+
   </div>
+
+  <!-- ============================================================
+       HISTÓRICO
+  ============================================================ -->
 
   <div>
-    <p class="font-bold mb-2">📊 Histórico mensal</p>
-    <div id="history" class="text-sm space-y-1"></div>
+
+    <p class="font-bold mb-2">
+      📊 Histórico mensal
+    </p>
+
+    <div
+      id="history"
+      class="text-sm space-y-1">
+    </div>
+
   </div>
 
 </div>
 
-<h1 class="text-xl font-bold mb-4 ml-10">💰 Controle de Gastos</h1>
+
+<!-- ============================================================
+     TÍTULO
+============================================================ -->
+
+<h1 class="text-xl font-bold mb-4 ml-10">
+💰 Controle de Gastos
+</h1>
+
 
 <div class="mb-4 ml-10 text-sm">
+
   <p id="userMain"></p>
+
 </div>
 
-<!-- ✅ RESUMO ADICIONADO -->
+
+<!-- ============================================================
+     RESUMO
+============================================================ -->
+
 <div class="grid grid-cols-2 gap-4 text-sm mb-4 ml-10">
+
   <div class="bg-green-900 p-3 rounded">
+
     <p>Total entradas</p>
-    <strong>R$ <span id="income">0</span></strong>
+
+    <strong>
+      R$ <span id="income">0</span>
+    </strong>
+
   </div>
+
+
   <div class="bg-red-900 p-3 rounded">
+
     <p>Total gastos</p>
-    <strong>R$ <span id="expenses">0</span></strong>
+
+    <strong>
+      R$ <span id="expenses">0</span>
+    </strong>
+
   </div>
+
+
   <div class="bg-blue-900 p-3 rounded">
+
     <p>Saldo</p>
-    <strong>R$ <span id="balance">0</span></strong>
+
+    <strong>
+      R$ <span id="balance">0</span>
+    </strong>
+
   </div>
+
+
   <div class="bg-yellow-700 text-black p-3 rounded">
+
     <p>Dívida restante</p>
-    <strong>R$ <span id="remaining">0</span></strong>
+
+    <strong>
+      R$ <span id="remaining">0</span>
+    </strong>
+
   </div>
+
 </div>
+
+
+<!-- ============================================================
+     NOVO LANÇAMENTO
+============================================================ -->
 
 <div class="bg-gray-800 p-4 rounded mb-4 ml-10">
 
-  <input id="desc" class="bg-gray-700 p-2 w-full rounded mb-2" placeholder="Descrição">
+  <input
+    id="desc"
+    class="bg-gray-700 p-2 w-full rounded mb-2"
+    placeholder="Descrição">
 
-  <select id="category" class="bg-gray-700 p-2 w-full rounded mb-2">
+
+  <select
+    id="category"
+    class="bg-gray-700 p-2 w-full rounded mb-2">
+
     <option>💧 Água</option>
     <option>🚌 Transporte</option>
     <option>🏠 Contas</option>
@@ -90,176 +214,1091 @@ class="fixed top-0 left-0 w-72 h-full bg-gray-950 p-4 transform -translate-x-ful
     <option>💡 Luz</option>
     <option>💰 Saldo</option>
     <option>📦 Outros</option>
+
   </select>
 
-  <input id="value" type="number" class="bg-gray-700 p-2 w-full rounded mb-2" placeholder="Valor">
 
-  <button onclick="add()" class="bg-blue-600 w-full p-2 rounded">Adicionar</button>
+  <input
+    id="value"
+    type="number"
+    class="bg-gray-700 p-2 w-full rounded mb-2"
+    placeholder="Valor">
+
+
+  <button
+    onclick="add()"
+    class="bg-blue-600 w-full p-2 rounded">
+    Adicionar
+  </button>
+
 </div>
 
-<h2 class="ml-10 font-bold mb-2">📌 Lista</h2>
-<div id="list" class="space-y-2 ml-10"></div>
+
+<!-- ============================================================
+     LISTA
+============================================================ -->
+
+<h2 class="ml-10 font-bold mb-2">
+📌 Lista
+</h2>
+
+<div
+  id="list"
+  class="space-y-2 ml-10">
+</div>
+
 
 <script>
 
-// FIREBASE (igual ao seu)
+/* ============================================================
+   1. CONFIGURAÇÃO FIREBASE
+============================================================ */
+
 const firebaseConfig = {
-  apiKey: "AIzaSyDwmzHk8pvORBgJ6312cHdvlrtJokFPFc4",
-  authDomain: "meu-controle-financeiro-ae97b.firebaseapp.com",
-  projectId: "meu-controle-financeiro-ae97b",
-  storageBucket: "meu-controle-financeiro-ae97b.firebasestorage.app",
-  messagingSenderId: "98052168829",
-  appId: "1:98052168829:web:34324f9a806b73e4bda514",
-  measurementId: "G-KLDMYGC5TY"
+
+  apiKey:
+    "AIzaSyC8Uz0IBqtqrmfTtECv3gr5rqbIWY4gIF0",
+
+  authDomain:
+    "meu-consumo-financeiro.firebaseapp.com",
+
+  projectId:
+    "meu-consumo-financeiro",
+
+  storageBucket:
+    "meu-consumo-financeiro.firebasestorage.app",
+
+  messagingSenderId:
+    "725415055361",
+
+  appId:
+    "1:725415055361:web:116b201e1be0fcd5117000",
+
+  measurementId:
+    "G-0N0XKJCS18"
+
 };
+
+
+/* ============================================================
+   2. INICIALIZAÇÃO FIREBASE
+============================================================ */
+
 firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
+
 const db = firebase.firestore();
 
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+/* ============================================================
+   3. PERSISTÊNCIA DO LOGIN
+============================================================ */
+
+auth.setPersistence(
+  firebase.auth.Auth.Persistence.LOCAL
+)
+.catch(error => {
+
+  console.error(
+    "Erro ao configurar persistência:",
+    error
+  );
+
+});
+
+
+/* ============================================================
+   4. PROVEDOR GOOGLE
+============================================================ */
+
+const provider =
+  new firebase.auth.GoogleAuthProvider();
+
+
+provider.setCustomParameters({
+  prompt: "select_account"
+});
+
+
+/* ============================================================
+   5. VARIÁVEIS
+============================================================ */
 
 let userId = null;
+
 let transactions = [];
+
 let salary = 0;
+
 let cycle = 1;
 
-function login(){
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithRedirect(provider);
-}
 
-function logout(){
-  auth.signOut();
-}
+/* ============================================================
+   6. LOGIN GOOGLE
+============================================================ */
 
-auth.getRedirectResult().catch(() => {});
+async function login() {
 
-auth.onAuthStateChanged((user) => {
-  const sidebar = document.getElementById("userSidebar");
-  const main = document.getElementById("userMain");
+  const loginBtn =
+    document.getElementById("loginBtn");
 
-  if (user) {
-    userId = user.uid;
-    sidebar.innerText = "Logado: " + user.email;
-    main.innerText = "Logado: " + user.email;
-    load();
-  } else {
-    userId = null;
-    sidebar.innerText = "Faça login";
-    main.innerText = "Faça login";
+
+  try {
+
+    /*
+     * Evita vários cliques
+     */
+
+    if (loginBtn) {
+
+      loginBtn.disabled = true;
+
+      loginBtn.innerText =
+        "Entrando...";
+
+    }
+
+
+    /*
+     * Garante que a persistência
+     * foi configurada antes do login.
+     */
+
+    await auth.setPersistence(
+      firebase.auth.Auth.Persistence.LOCAL
+    );
+
+
+    /*
+     * LOGIN POR POPUP
+     *
+     * O usuário já clicou no botão,
+     * portanto o navegador permite
+     * abrir a janela do Google.
+     */
+
+    const result =
+      await auth.signInWithPopup(
+        provider
+      );
+
+
+    console.log(
+      "Login realizado com sucesso:",
+      result.user.email
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Erro no login Google:",
+      error
+    );
+
+
+    let mensagem =
+      "Não foi possível entrar com o Google.";
+
+
+    if (
+      error.code ===
+      "auth/popup-closed-by-user"
+    ) {
+
+      mensagem =
+        "A janela do Google foi fechada.";
+
+    }
+
+
+    else if (
+      error.code ===
+      "auth/popup-blocked"
+    ) {
+
+      mensagem =
+        "O navegador bloqueou a janela do Google. Permita pop-ups para este site.";
+
+    }
+
+
+    else if (
+      error.code ===
+      "auth/unauthorized-domain"
+    ) {
+
+      mensagem =
+        "Este domínio não está autorizado no Firebase.";
+
+    }
+
+
+    else if (
+      error.code ===
+      "auth/account-exists-with-different-credential"
+    ) {
+
+      mensagem =
+        "Esta conta já existe usando outro método de login.";
+
+    }
+
+
+    else if (error.message) {
+
+      mensagem =
+        error.message;
+
+    }
+
+
+    alert(mensagem);
+
+
+  } finally {
+
+    if (loginBtn) {
+
+      loginBtn.disabled = false;
+
+      loginBtn.innerText =
+        "Login Google";
+
+    }
+
   }
-});
 
-// SIDEBAR (igual)
-function toggleSidebar(){
-  const sidebar = document.getElementById("sidebar");
-  const overlay = document.getElementById("overlay");
+}
 
-  const isClosed = sidebar.classList.contains("-translate-x-full");
 
-  if(isClosed){
-    sidebar.classList.remove("-translate-x-full");
-    overlay.classList.remove("hidden");
-  } else {
-    sidebar.classList.add("-translate-x-full");
-    overlay.classList.add("hidden");
+/* ============================================================
+   7. LOGOUT
+============================================================ */
+
+async function logout() {
+
+  try {
+
+    await auth.signOut();
+
+    console.log(
+      "Usuário saiu da conta."
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao sair:",
+      error
+    );
+
+    alert(
+      "Não foi possível sair da conta."
+    );
+
   }
+
 }
 
-function closeSidebar(){
-  document.getElementById("sidebar").classList.add("-translate-x-full");
-  document.getElementById("overlay").classList.add("hidden");
+
+/* ============================================================
+   8. AUTENTICAÇÃO
+============================================================ */
+
+auth.onAuthStateChanged(
+  async user => {
+
+    const sidebar =
+      document.getElementById(
+        "userSidebar"
+      );
+
+
+    const main =
+      document.getElementById(
+        "userMain"
+      );
+
+
+    const loginBtn =
+      document.getElementById(
+        "loginBtn"
+      );
+
+
+    const logoutBtn =
+      document.getElementById(
+        "logoutBtn"
+      );
+
+
+    /*
+     * USUÁRIO LOGADO
+     */
+
+    if (user) {
+
+      console.log(
+        "Usuário autenticado:",
+        user.email
+      );
+
+
+      userId =
+        user.uid;
+
+
+      if (sidebar) {
+
+        sidebar.innerText =
+          "Logado: " +
+          user.email;
+
+      }
+
+
+      if (main) {
+
+        main.innerText =
+          "Logado: " +
+          user.email;
+
+      }
+
+
+      if (loginBtn) {
+
+        loginBtn.style.display =
+          "none";
+
+      }
+
+
+      if (logoutBtn) {
+
+        logoutBtn.style.display =
+          "block";
+
+      }
+
+
+      /*
+       * Carrega os dados
+       * somente depois do login.
+       */
+
+      await load();
+
+    }
+
+
+    /*
+     * USUÁRIO NÃO LOGADO
+     */
+
+    else {
+
+      console.log(
+        "Nenhum usuário autenticado."
+      );
+
+
+      userId =
+        null;
+
+
+      transactions =
+        [];
+
+
+      if (sidebar) {
+
+        sidebar.innerText =
+          "Faça login";
+
+      }
+
+
+      if (main) {
+
+        main.innerText =
+          "Faça login";
+
+      }
+
+
+      if (loginBtn) {
+
+        loginBtn.style.display =
+          "block";
+
+      }
+
+
+      if (logoutBtn) {
+
+        logoutBtn.style.display =
+          "none";
+
+      }
+
+
+      render();
+
+    }
+
+  }
+);
+
+
+/* ============================================================
+   9. SIDEBAR
+============================================================ */
+
+function toggleSidebar() {
+
+  const sidebar =
+    document.getElementById(
+      "sidebar"
+    );
+
+
+  const overlay =
+    document.getElementById(
+      "overlay"
+    );
+
+
+  const isClosed =
+    sidebar.classList.contains(
+      "-translate-x-full"
+    );
+
+
+  if (isClosed) {
+
+    sidebar.classList.remove(
+      "-translate-x-full"
+    );
+
+
+    overlay.classList.remove(
+      "hidden"
+    );
+
+  }
+
+  else {
+
+    sidebar.classList.add(
+      "-translate-x-full"
+    );
+
+
+    overlay.classList.add(
+      "hidden"
+    );
+
+  }
+
 }
 
-window.addEventListener("load", () => {
-  document.getElementById("sidebar").classList.add("-translate-x-full");
-  document.getElementById("overlay").classList.add("hidden");
-});
 
-// ADD
-function add(){
-  const desc = document.getElementById("desc").value;
-  const value = parseFloat(document.getElementById("value").value);
-  const category = document.getElementById("category").value;
+/* ============================================================
+   10. FECHAR SIDEBAR
+============================================================ */
 
-  if(!desc || isNaN(value)) return;
+function closeSidebar() {
+
+  document
+    .getElementById("sidebar")
+    .classList
+    .add("-translate-x-full");
+
+
+  document
+    .getElementById("overlay")
+    .classList
+    .add("hidden");
+
+}
+
+
+/* ============================================================
+   11. ESTADO INICIAL SIDEBAR
+============================================================ */
+
+window.addEventListener(
+  "load",
+  () => {
+
+    document
+      .getElementById("sidebar")
+      .classList
+      .add("-translate-x-full");
+
+
+    document
+      .getElementById("overlay")
+      .classList
+      .add("hidden");
+
+  }
+);
+
+
+/* ============================================================
+   12. ADICIONAR LANÇAMENTO
+============================================================ */
+
+function add() {
+
+  if (!userId) {
+
+    alert(
+      "Faça login com o Google primeiro."
+    );
+
+    return;
+
+  }
+
+
+  const desc =
+    document
+      .getElementById("desc")
+      .value
+      .trim();
+
+
+  const value =
+    parseFloat(
+      document
+        .getElementById("value")
+        .value
+    );
+
+
+  const category =
+    document
+      .getElementById("category")
+      .value;
+
+
+  if (!desc || isNaN(value)) {
+
+    alert(
+      "Preencha a descrição e o valor."
+    );
+
+    return;
+
+  }
+
 
   transactions.push({
-    id: Date.now(),
-    desc,
-    value,
-    category,
-    paid: false
+
+    id:
+      Date.now(),
+
+    desc:
+      desc,
+
+    value:
+      value,
+
+    category:
+      category,
+
+    paid:
+      false
+
   });
+
+
+  document
+    .getElementById("desc")
+    .value = "";
+
+
+  document
+    .getElementById("value")
+    .value = "";
+
 
   save();
+
   render();
+
 }
 
-// SAVE / LOAD iguais...
 
-async function load(){
-  if(!userId) return;
-  const doc = await db.collection("users").doc(userId).get();
-  if(doc.exists){
-    const data = doc.data();
-    transactions = data.transactions || [];
+/* ============================================================
+   13. CARREGAR DADOS
+============================================================ */
+
+async function load() {
+
+  if (!userId) {
+
+    return;
+
   }
-  render();
+
+
+  try {
+
+    const documentSnapshot =
+      await db
+        .collection("users")
+        .doc(userId)
+        .get();
+
+
+    if (
+      documentSnapshot.exists
+    ) {
+
+      const data =
+        documentSnapshot.data();
+
+
+      transactions =
+        Array.isArray(
+          data.transactions
+        )
+          ? data.transactions
+          : [];
+
+    }
+
+    else {
+
+      transactions = [];
+
+    }
+
+
+    render();
+
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao carregar dados:",
+      error
+    );
+
+
+    alert(
+      "Você entrou, mas não foi possível carregar seus dados do Firebase."
+    );
+
+  }
+
 }
 
-function save(){
-  if(!userId) return;
-  db.collection("users").doc(userId).set({ transactions });
+
+/* ============================================================
+   14. SALVAR DADOS
+============================================================ */
+
+async function save() {
+
+  if (!userId) {
+
+    return;
+
+  }
+
+
+  try {
+
+    await db
+      .collection("users")
+      .doc(userId)
+      .set({
+
+        transactions:
+          transactions
+
+      });
+
+
+    console.log(
+      "Dados salvos."
+    );
+
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao salvar:",
+      error
+    );
+
+
+    alert(
+      "Erro ao salvar os dados."
+    );
+
+  }
+
 }
 
-// ✅ RENDER COM RESUMO
-function render(){
 
-  const list = document.getElementById("list");
+/* ============================================================
+   15. RENDERIZAÇÃO
+============================================================ */
+
+function render() {
+
+  const list =
+    document.getElementById(
+      "list"
+    );
+
+
+  if (!list) {
+
+    return;
+
+  }
+
+
   list.innerHTML = "";
 
+
   let income = 0;
+
   let expenses = 0;
 
-  transactions.forEach(t => {
 
-    if(t.value > 0) income += t.value;
-    else expenses += t.value;
+  transactions.forEach(
+    t => {
 
-    let status = "";
+      const value =
+        Number(t.value) || 0;
 
-    if(t.value < 0 && !t.paid){
-      status = `<span style="color:red;font-weight:bold">PENDENTE</span>`;
-    }
 
-    if(t.paid){
-      status = `<span style="color:green;font-weight:bold">PAGO</span>`;
-    }
+      if (value > 0) {
 
-    list.innerHTML += `
-      <div class="bg-gray-800 p-2 rounded flex justify-between">
-        <div>
-          ${t.desc} (${t.category}) - R$ ${t.value}
-          ${status}
+        income += value;
+
+      }
+
+      else {
+
+        expenses += value;
+
+      }
+
+
+      let status = "";
+
+
+      if (
+        value < 0 &&
+        !t.paid
+      ) {
+
+        status =
+          `<span style="color:red;font-weight:bold">
+            PENDENTE
+          </span>`;
+
+      }
+
+
+      if (t.paid) {
+
+        status =
+          `<span style="color:green;font-weight:bold">
+            PAGO
+          </span>`;
+
+      }
+
+
+      list.innerHTML += `
+
+        <div
+          class="bg-gray-800 p-2 rounded flex justify-between">
+
+          <div>
+
+            ${escapeHtml(t.desc)}
+            (${escapeHtml(t.category)})
+            -
+            R$ ${value.toFixed(2)}
+
+            ${status}
+
+          </div>
+
+
+          <div class="flex gap-2">
+
+            <button
+              onclick="togglePaid(${t.id})">
+              ✔
+            </button>
+
+
+            <button
+              onclick="del(${t.id})">
+              ❌
+            </button>
+
+          </div>
+
         </div>
-        <div class="flex gap-2">
-          <button onclick="togglePaid(${t.id})">✔</button>
-          <button onclick="del(${t.id})">❌</button>
-        </div>
-      </div>
-    `;
-  });
 
-  const balance = income + expenses;
-  const remaining = Math.abs(expenses);
+      `;
 
-  document.getElementById("income").innerText = income.toFixed(2);
-  document.getElementById("expenses").innerText = Math.abs(expenses).toFixed(2);
-  document.getElementById("balance").innerText = balance.toFixed(2);
-  document.getElementById("remaining").innerText = remaining.toFixed(2);
+    }
+  );
+
+
+  const balance =
+    income + expenses;
+
+
+  const remaining =
+    Math.abs(expenses);
+
+
+  document
+    .getElementById("income")
+    .innerText =
+      income.toFixed(2);
+
+
+  document
+    .getElementById("expenses")
+    .innerText =
+      Math.abs(
+        expenses
+      ).toFixed(2);
+
+
+  document
+    .getElementById("balance")
+    .innerText =
+      balance.toFixed(2);
+
+
+  document
+    .getElementById("remaining")
+    .innerText =
+      remaining.toFixed(2);
+
 }
+
+
+/* ============================================================
+   16. PROTEÇÃO CONTRA HTML
+============================================================ */
+
+function escapeHtml(value) {
+
+  return String(
+    value ?? ""
+  )
+  .replace(
+    /[&<>"']/g,
+    char => ({
+
+      "&":
+        "&amp;",
+
+      "<":
+        "&lt;",
+
+      ">":
+        "&gt;",
+
+      '"':
+        "&quot;",
+
+      "'":
+        "&#039;"
+
+    }[char])
+  );
+
+}
+
+
+/* ============================================================
+   17. SALÁRIO
+============================================================ */
+
+async function setSalary() {
+
+  if (!userId) {
+
+    alert(
+      "Faça login primeiro."
+    );
+
+    return;
+
+  }
+
+
+  salary =
+    Number(
+      document
+        .getElementById("salary")
+        .value
+    ) || 0;
+
+
+  await db
+    .collection("users")
+    .doc(userId)
+    .set(
+      {
+        salary
+      },
+      {
+        merge: true
+      }
+    );
+
+
+  alert(
+    "Salário salvo."
+  );
+
+}
+
+
+/* ============================================================
+   18. CICLO
+============================================================ */
+
+async function setCycle() {
+
+  if (!userId) {
+
+    alert(
+      "Faça login primeiro."
+    );
+
+    return;
+
+  }
+
+
+  cycle =
+    Number(
+      document
+        .getElementById("cycle")
+        .value
+    ) || 1;
+
+
+  cycle =
+    Math.min(
+      31,
+      Math.max(
+        1,
+        cycle
+      )
+    );
+
+
+  await db
+    .collection("users")
+    .doc(userId)
+    .set(
+      {
+        cycle
+      },
+      {
+        merge: true
+      }
+    );
+
+
+  alert(
+    "Dia do ciclo salvo."
+  );
+
+}
+
+
+/* ============================================================
+   19. MARCAR COMO PAGO
+============================================================ */
+
+function togglePaid(id) {
+
+  const index =
+    transactions.findIndex(
+      t =>
+        Number(t.id) ===
+        Number(id)
+    );
+
+
+  if (index === -1) {
+
+    return;
+
+  }
+
+
+  transactions[index].paid =
+    !transactions[index].paid;
+
+
+  save();
+
+  render();
+
+}
+
+
+/* ============================================================
+   20. EXCLUIR
+============================================================ */
+
+function del(id) {
+
+  if (
+    !confirm(
+      "Excluir este lançamento?"
+    )
+  ) {
+
+    return;
+
+  }
+
+
+  transactions =
+    transactions.filter(
+      t =>
+        Number(t.id) !==
+        Number(id)
+    );
+
+
+  save();
+
+  render();
+
+}
+
+
+/* ============================================================
+   21. INICIALIZAÇÃO
+============================================================ */
 
 render();
 
@@ -267,3 +1306,4 @@ render();
 
 </body>
 </html>
+```
